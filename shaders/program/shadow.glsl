@@ -43,7 +43,7 @@ void main ()
 {
     gl_Position = vec4(shadowProjScale, 1.0) * (gl_ModelViewMatrix * gl_Vertex);
 
-    gl_Position.xy = distort(gl_Position.xy);
+    gl_Position.xy = distortShadowPos(gl_Position.xy);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     //lightLevels = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;

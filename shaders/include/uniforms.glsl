@@ -4,10 +4,13 @@
     uniform sampler2D specular;
     uniform sampler2D gtexture;
 
+    uniform sampler2DShadow shadowtex1HW;
+    uniform sampler2DShadow shadowtex0HW;
+
     uniform sampler2D shadowcolor1;
     uniform sampler2D shadowcolor0;
-    uniform sampler2DShadow shadowtex1;
-    uniform sampler2DShadow shadowtex0;
+    uniform sampler2D shadowtex1;
+    uniform sampler2D shadowtex0;
 
     uniform usampler2D colortex9;
     uniform usampler2D colortex8;
@@ -29,6 +32,10 @@
     uniform mat4 gbufferModelView;
     uniform mat4 shadowModelView;
     
+    uniform vec3 shadowDir;
+    uniform vec3 moonDir;
+    uniform vec3 sunDir;
+
     uniform vec3 cameraVelocity;
 
     uniform vec2 internalScreenSize;

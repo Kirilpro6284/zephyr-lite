@@ -3,7 +3,18 @@
 
     #define rcp(x) (1.0 / (x))
 
-    #define INFINITY exp2(128.0)
+    #define rcp(x)       (1.0 / (x))
+    #define max0(x)      max(x, 0.0)
+    #define min1(x)      min(x, 1.0)
+    #define saturate(x)  clamp(x, 0.0, 1.0)
+    #define HALF_PI      1.57079632
+    #define PI           3.14159265
+    #define TWO_PI       6.28318530
+    #define INFINITY     exp2(128.0)
+    #define luminance(c) dot(c, vec3(0.2126, 0.7152, 0.0722))
+    #define torad(x)     (0.01745329 * x)
+    #define hermite(x)   smoothstep(0.0, 1.0, x)
+
     #define EXPONENT_BIAS 128.0
     
     #if TEMPORAL_UPSAMPLING == 100
@@ -24,6 +35,38 @@
 
     const vec3 shadowProjScale = vec3(rcp(shadowDistance), rcp(shadowDistance), -rcp(shadowDepthDist));
     const vec3 shadowProjScaleInv = vec3(shadowDistance, shadowDistance, -shadowDepthDist);
+
+    void applySpecularMap (vec4 specularData, inout vec3 albedo, out vec3 f0, out float roughness, out float emission) 
+    {
+        roughness = pow(1.0 - specularData.r, 2.0);
+        emission = (specularData.a < 254.5 / 255.0 ? specularData.a * 255.0 / 254.0 : 0.0);
+
+        int reflectanceValue = int(specularData.g * 255.0 + 0.5);
+        float metallic;
+
+        if (reflectanceValue < 230) {
+            f0 = mix(vec3(0.04), vec3(1.0), specularData.g);
+            metallic = 0.0;
+        } else {
+            f0 = albedo;
+            metallic = 1.0;
+        }
+
+        albedo *= (1.0 - metallic);
+    }
+
+    mat2 rotate (float theta)
+    {
+        float cosTheta = cos(theta);
+        float sinTheta = sin(theta);
+
+        return mat2(cosTheta, -sinTheta, sinTheta, cosTheta);
+    }
+
+    float sqr (float x)
+    {
+        return x * x;
+    }
 
     // https://twitter.com/Stubbesaurus/status/937994790553227264
 
