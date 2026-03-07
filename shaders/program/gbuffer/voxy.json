@@ -1,0 +1,17 @@
+{
+  "unusedString":
+    "
+        #include "/include/config.glsl"
+        #include "/include/main.glsl"
+    ",
+  "version": 1,
+  "uniforms": [
+    "taa_offset"
+  ],
+  "taaOffset": "{return taa_offset;}",
+  "useViewportDims": true,
+  "excludeLodsFromVanillaDepth": true,
+  "renderScale": [TAAU_RENDER_SCALE, TAAU_RENDER_SCALE],
+  "opaqueDrawBuffers": [8, 9],
+  "translucentDrawBuffers": [1]
+}
