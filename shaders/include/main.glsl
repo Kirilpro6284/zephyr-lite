@@ -22,6 +22,9 @@
         #define TAAU_RENDER_SCALE 0.25
     #endif
 
+    const vec3 shadowProjScale = vec3(rcp(shadowDistance), rcp(shadowDistance), -rcp(shadowDepthDist));
+    const vec3 shadowProjScaleInv = vec3(shadowDistance, shadowDistance, -shadowDepthDist);
+
     // https://twitter.com/Stubbesaurus/status/937994790553227264
 
     vec2 octEncode (in vec3 n) 
@@ -51,7 +54,27 @@
             texelFetch(colortex8, texel, 0).rg,
             texelFetch(colortex9, texel, 0).rg
         );
-    } 
+    }
+
+    // https://discordapp.com/channels/237199950235041794/525510804494221312/1416364500591837216
+    vec3 blueNoise (vec2 coord) 
+    {
+        return texelFetch(
+            noisetex,
+            ivec3(ivec2(coord) % 128, frameCounter % 64),
+            0
+        ).rgb;
+    }
+
+    // R2 sequence from
+    // https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
+
+    vec3 blueNoise (vec2 coord, int i) 
+    {
+        const float g = 1.324717;
+
+        return blueNoise(coord + 128.0 * fract(0.5 + i * (1.0 / vec2(g, g * g))));
+    }
 #endif
 
 #endif

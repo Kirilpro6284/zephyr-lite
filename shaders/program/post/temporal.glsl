@@ -8,16 +8,6 @@
 layout (location = 0) out vec4 history;
 layout (location = 1) out vec4 color;
 
-vec3 reinhard (vec3 x)
-{
-    return x / (x + 1.0);
-}
-
-vec3 reinhardInv (vec3 x)
-{
-    return x / (1.0 - x);
-}
-
 void main ()
 {
     ivec2 texel = ivec2(gl_FragCoord.xy);
@@ -37,7 +27,7 @@ void main ()
 
     vec3 playerPos = screenToPlayerPos(uv, depth).xyz;
 
-    vec4 prevPos = gbufferPreviousProjection * gbufferPreviousModelView * vec4(playerPos.xyz + step(0.05, dot(playerPos.xyz, playerPos.xyz)) * cameraVelocity, 1.0);
+    vec4 prevPos = gbufferPreviousProjection * gbufferPreviousModelView * vec4(playerPos.xyz + float(depth < 1.0) * step(0.05, dot(playerPos.xyz, playerPos.xyz)) * cameraVelocity, 1.0);
 
     vec3 prevUv = prevPos.xyz / prevPos.w;
     prevUv = vec3(prevUv.xy + taa_offset, prevUv.z) * 0.5 + 0.5;
@@ -70,10 +60,10 @@ void main ()
 
             float alpha = rcp(prevData.w);
 
-            history.rgb = reinhardInv(
+            history.rgb = -log(
                 mix(
-                    reinhard(prevData.rgb), 
-                    reinhard(currData.rgb), 
+                    exp(-prevData.rgb), 
+                    exp(-currData.rgb), 
                     isUnderSample && prevData.w > 1.0 ? 0.0005 : alpha
                 )
             );
