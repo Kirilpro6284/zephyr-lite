@@ -137,7 +137,7 @@
 
     vec3 evalScattering (vec3 rayOrigin, vec3 rayDir, vec3 lightDir)
     {
-        float viewZenith = rayDir.y;
+        float mu = dot(rayDir, lightDir);
         
         #ifndef SKY_MS
             if (rayDir.y < 0.0) rayDir = normalize(vec3(rayDir.x, 0.0, rayDir.z));
@@ -151,12 +151,6 @@
         vec3 opticalDepth = vec3(0.0);
         vec3 integratedData = vec3(0.0);
         
-        #ifdef SKY_MS
-            float mu = dot(rayDir, lightDir);
-        #else
-            float mu = (1.0 - sqr(1.0 - min1(viewZenith + 1.0))) * dot(rayDir, lightDir);
-        #endif
-
         #ifdef USE_KLEIN_NISHINA_PHASE
             vec2 phase = vec2(rayleighPhase(mu), kleinNishinaPhase(mu, 3000.0));
         #else

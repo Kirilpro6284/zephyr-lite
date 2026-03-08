@@ -6,6 +6,8 @@ option.NIGHT_BRIGHTNESS    = Night Brightness
 option.TONEMAP_OPERATOR    = Tonemap Operator
 option.TAA                 = TAA
 option.TEMPORAL_UPSAMPLING = Temporal Upsampling
+option.PURKINJE_EFFECT     = Purkinje Effect
+option.PURKINJE_AMOUNT     = Purkinje Amount
 
 value.TONEMAP_OPERATOR.0 = AgX
 value.TONEMAP_OPERATOR.1 = Lottes

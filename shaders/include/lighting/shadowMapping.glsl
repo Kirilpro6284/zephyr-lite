@@ -19,12 +19,6 @@
 		return sign(pos) * (exp(abs(pos) * log(c + 1.0)) - 1.0) / c;
 	}
 
-    float getShadowBias (vec2 shadowClipPos) 
-    {
-        vec2 rate = distortShadowPosDiff(shadowClipPos);
-        return shadowDistance / (min(rate.x, rate.y) * float(shadowMapResolution));
-    }
-
     float getBlockerDepth (vec3 shadowViewPos, vec2 dither)
     {
         float blockerDepth = 0.0;
@@ -50,7 +44,7 @@
     ) {
         vec2 distortDiff = distortShadowPosDiff(shadowProjScale.xy * shadowViewPos.xy);
 
-        vec3 shadowPos = shadowProjScale * (shadowViewPos + mat3(shadowModelView) * normal * (SHADOW_BIAS + shadowDistance / (min(distortDiff.x, distortDiff.y) * float(shadowMapResolution))));
+        vec3 shadowPos = shadowProjScale * (shadowViewPos + mat3(shadowModelView) * normal * (SHADOW_BIAS + shadowDistance * rcp(min(distortDiff.x, distortDiff.y) * float(shadowMapResolution))));
 
         float shadowGradient = smoothstep(-1.0, -0.99, -abs(shadowPos.x))
                              * smoothstep(-1.0, -0.99, -abs(shadowPos.y))
