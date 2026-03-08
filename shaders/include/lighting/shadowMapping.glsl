@@ -74,10 +74,10 @@
             float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + dither.y));
             state *= factor;
 
-            vec2 offset = sampleDist * state;
+            vec2 offset = distortDiff * sampleDist * state;
             float depthBias = -max0(0.5 * shadowProjScale.z * shadowProjScaleInv.x * dot(offset, shadowViewNormal.xy) / shadowViewNormal.z);
 
-            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + distortDiff * offset, shadowPos.z + depthBias) * 0.5 + 0.5).r;
+            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + offset, shadowPos.z + depthBias) * 0.5 + 0.5).r;
         }
 
         integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), shadowSharpening));
@@ -91,10 +91,10 @@
                 float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + dither.y));
                 state *= factor;
 
-                vec2 offset = sampleDist * state;
+                vec2 offset = distortDiff * sampleDist * state;
                 float depthBias = -max0(0.5 * shadowProjScale.z * shadowProjScaleInv.x * dot(offset, shadowViewNormal.xy) / shadowViewNormal.z);
 
-                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + distortDiff * offset) * 0.5 + 0.5));
+                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + offset) * 0.5 + 0.5));
 
                 vec4 sampleColor = texelFetch(shadowcolor0, sampleTexel, 0);
                 float sampleDepth = step((shadowPos.z + depthBias) * 0.5 + 0.5, texelFetch(shadowtex0, sampleTexel, 0).x);

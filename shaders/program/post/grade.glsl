@@ -7,11 +7,14 @@
 /* RENDERTARGETS: 1 */
 layout (location = 0) out vec4 color;
 
+const vec3 rodResponse = vec3(0.014, 0.270, 0.716);
+const float purkinjeBrightness = 2.5;
+
 vec3 getPurkinjeShift (vec3 color)
 {
-    float purkinje = dot(color, vec3(0.027, 0.523, 1.386));
+    float purkinje = purkinjeBrightness * dot(color, rodResponse);
 
-    return mix(color, vec3(0.4, 0.65, 1.2) * purkinje, exp(-rcp(PURKINJE_AMOUNT) * 4000.0 * purkinje));
+    return mix(color, vec3(0.4, 0.65, 1.0) * purkinje, exp(-rcp(PURKINJE_AMOUNT) * 1250.0 * purkinje));
 }
 
 void main ()
