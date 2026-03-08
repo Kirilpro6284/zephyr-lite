@@ -1,6 +1,12 @@
 #ifndef INCLUDE_UNIFORMS
     #define INCLUDE_UNIFORMS
 
+    layout (rgba16f) uniform image2D imgScattering;
+    uniform sampler2D scattering;
+
+    uniform sampler3D depthtex2;
+    uniform sampler3D noisetex;
+
     uniform sampler2D specular;
     uniform sampler2D gtexture;
 
@@ -20,8 +26,6 @@
     uniform sampler2D colortex1;
 
     uniform sampler2D depthtex1;
-
-    uniform sampler3D noisetex;
 
     uniform mat4 gbufferPreviousProjection;
     uniform mat4 gbufferProjectionInverse;
@@ -44,6 +48,8 @@
     uniform vec2 taa_offset;
     uniform vec2 screenSize;
     uniform vec2 texelSize; 
+
+    uniform float eyeAltitude;
     
     uniform int frameCounter;
 

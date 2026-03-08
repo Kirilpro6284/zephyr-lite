@@ -19,8 +19,10 @@ layout (location = 1) out vec4 shadowcolor1Out;
 
 void main ()
 {
-    vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
-   
+    vec4 albedo = texture(gtexture, texcoord);
+
+    albedo.rgb *= vertexColor;
+
     shadowcolor0Out = albedo;
     shadowcolor1Out = vec4(0.0);
 

@@ -68,6 +68,50 @@
         return x * x;
     }
 
+    vec2 sqr (vec2 x)
+    {
+        return x * x;
+    }
+
+    vec3 sqr (vec3 x)
+    {
+        return x * x;
+    }
+
+    float lift (float x, float a)
+    {
+        return x / (a * abs(x) + 1.0 - a);
+    }
+	
+	float liftInv (float x, float a)
+    {
+        return x * (1.0 - a) / (1.0 - abs(x) * a);
+    }
+
+    // Adapted from https://www.youtube.com/watch?v=Qz0KTGYJtUk&t=674s
+
+    uint randomInt (inout uint state)
+    {
+        state = state * 747796405u + 2891336453u;
+        uint result = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        return (result >> 22u) ^ result;
+    }
+
+    float randomValue (inout uint state) 
+    {
+        return randomInt(state) * (1.0 / 4294967296.0);
+    }
+
+    float normalDist (inout uint state)
+    {
+        return sqrt(-log2(randomValue(state))) * cos(TWO_PI * randomValue(state));
+    }
+
+    vec3 randomDir (inout uint state)
+    {	
+        return normalize(vec3(normalDist(state), normalDist(state), normalDist(state)));
+    }
+
     // https://twitter.com/Stubbesaurus/status/937994790553227264
 
     vec2 octEncode (in vec3 n) 

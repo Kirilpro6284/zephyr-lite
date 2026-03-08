@@ -1,0 +1,15 @@
+option.shadowMapResolution = Shadow Map Resolution
+option.shadowDistance      = Shadow Distance
+option.SHADOW_SOFTNESS     = Shadow Softness
+option.SHADOW_SAMPLES      = Shadow Samples
+option.NIGHT_BRIGHTNESS    = Night Brightness
+option.TONEMAP_OPERATOR    = Tonemap Operator
+option.TAA                 = TAA
+option.TEMPORAL_UPSAMPLING = Temporal Upsampling
+
+value.TONEMAP_OPERATOR.0 = AgX
+value.TONEMAP_OPERATOR.1 = Lottes
+value.TONEMAP_OPERATOR.2 = Neutral
+value.TONEMAP_OPERATOR.3 = Reinhard2
+value.TONEMAP_OPERATOR.4 = Exponential
+value.TONEMAP_OPERATOR.5 = TonyMcMapface

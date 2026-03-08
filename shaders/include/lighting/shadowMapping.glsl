@@ -43,16 +43,27 @@
         return blockerDepth * rcp(SHADOW_BLOCKER_SAMPLES);
     }
 
-    vec3 getShadow (vec3 shadowViewPos, vec3 normal, vec2 dither, float blockerDepth)
-    {
-        float biasAmount = getShadowBias(shadowProjScale.xy * shadowViewPos.xy);
+    vec3 getShadow (vec3 shadowViewPos, vec3 normal, vec2 dither
+        #ifdef SHADOW_VPS
+            , float blockerDepth
+        #endif
+    ) {
+        vec2 distortDiff = distortShadowPosDiff(shadowProjScale.xy * shadowViewPos.xy);
 
-        vec3 shadowPos = shadowProjScale * (shadowViewPos + mat3(shadowModelView) * normal * (biasAmount * 1.3 + 0.02));
+        vec3 shadowPos = shadowProjScale * (shadowViewPos + mat3(shadowModelView) * normal * (SHADOW_BIAS + shadowDistance / (min(distortDiff.x, distortDiff.y) * float(shadowMapResolution))));
+        vec2 shadowDistortPos = distortShadowPos(shadowPos.xy);
+
         vec3 shadowViewNormal = mat3(shadowModelView) * normal;
 
-        float kernelRadius = shadowProjScale.x * max(20.0 / float(shadowMapResolution), blockerDepth * SHADOW_SOFTNESS);
+        float penumbraSize = blockerDepth * SHADOW_SOFTNESS;
 
-       //float shadowSharpening = 
+        #ifdef SHADOW_VPS
+            float kernelRadius = shadowProjScale.x * max(100.0 / float(shadowMapResolution), penumbraSize);
+        #else
+            float kernelRadius = shadowProjScale.x * SHADOW_SOFTNESS * 2.0;
+        #endif
+
+        float shadowSharpening = clamp(100.0 / (penumbraSize * shadowMapResolution), 1.0, 3.0);
 
         vec4 integratedData = vec4(0.0);
 
@@ -67,8 +78,10 @@
             vec2 offset = sampleDist * state;
             float depthBias = -max0(0.5 * shadowProjScale.z * shadowProjScaleInv.x * dot(offset, shadowViewNormal.xy) / shadowViewNormal.z);
 
-            integratedData.w += texture(shadowtex1HW, vec3(distortShadowPos(shadowPos.xy + offset), shadowPos.z + depthBias) * 0.5 + 0.5).r;
+            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + distortDiff * offset, shadowPos.z + depthBias) * 0.5 + 0.5).r;
         }
+
+        integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), shadowSharpening));
 
         #ifdef COLORED_SHADOWS
             state = vec2(sin(dither.x * TWO_PI), cos(dither.x * TWO_PI));
@@ -82,20 +95,20 @@
                 vec2 offset = sampleDist * state;
                 float depthBias = -max0(0.5 * shadowProjScale.z * shadowProjScaleInv.x * dot(offset, shadowViewNormal.xy) / shadowViewNormal.z);
 
-                vec2 sampleUv = distortShadowPos(shadowPos.xy + offset) * 0.5 + 0.5;
+                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + distortDiff * offset) * 0.5 + 0.5));
 
-                vec4 sampleColor = texture(shadowcolor0, sampleUv);
-                float sampleDepth = step((shadowPos.z + depthBias) * 0.5 + 0.5, texture(shadowtex0, sampleUv).x);
+                vec4 sampleColor = texelFetch(shadowcolor0, sampleTexel, 0);
+                float sampleDepth = step((shadowPos.z + depthBias) * 0.5 + 0.5, texelFetch(shadowtex0, sampleTexel, 0).x);
 
                 if (sampleColor.a > 0.99 && sampleDepth == 0.0) continue;
-
+                
                 integratedData.rgb += mix(sampleColor.rgb * (1.0 - sampleColor.a), vec3(1.0), sampleDepth);
                 kernelSum += 1.0;
             }
 
-            return kernelSum < 0.5 ? integratedData.www * rcp(float(SHADOW_SAMPLES)) : (integratedData.rgb * integratedData.w * rcp(float(SHADOW_SAMPLES) * kernelSum));
+            return kernelSum < 0.5 ? integratedData.www : (rcp(kernelSum) * integratedData.rgb * integratedData.w);
         #else
-            return integratedData.www * rcp(float(SHADOW_SAMPLES));
+            return integratedData.www;
         #endif
     }
 
