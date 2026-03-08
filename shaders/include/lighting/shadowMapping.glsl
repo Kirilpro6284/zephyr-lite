@@ -51,6 +51,11 @@
         vec2 distortDiff = distortShadowPosDiff(shadowProjScale.xy * shadowViewPos.xy);
 
         vec3 shadowPos = shadowProjScale * (shadowViewPos + mat3(shadowModelView) * normal * (SHADOW_BIAS + shadowDistance / (min(distortDiff.x, distortDiff.y) * float(shadowMapResolution))));
+
+        float shadowGradient = smoothstep(-1.0, -0.99, -abs(shadowPos.x))
+                             * smoothstep(-1.0, -0.99, -abs(shadowPos.y))
+                             * smoothstep(-1.0, -0.99, -abs(shadowPos.z));
+
         vec2 shadowDistortPos = distortShadowPos(shadowPos.xy);
 
         vec3 shadowViewNormal = mat3(shadowModelView) * normal;
@@ -106,9 +111,9 @@
                 kernelSum += 1.0;
             }
 
-            return kernelSum < 0.5 ? integratedData.www : (rcp(kernelSum) * integratedData.rgb * integratedData.w);
+            return shadowGradient * (kernelSum < 0.5 ? integratedData.www : (rcp(kernelSum) * integratedData.rgb * integratedData.w)) + (1.0 - shadowGradient);
         #else
-            return integratedData.www;
+            return shadowGradient * integratedData.www + (1.0 - shadowGradient);
         #endif
     }
 

@@ -50,7 +50,7 @@ void main ()
 
     applySpecularMap(specularData, albedo.rgb, f0, roughness, emission);
 
-    float depth = texelFetch(depthtex1, texel, 0).r;
+    float depth = texelFetch(colortex11, texel, 0).r;
 
     vec3 playerPos = screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, depth).xyz;
 

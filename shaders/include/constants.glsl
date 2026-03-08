@@ -17,7 +17,8 @@
         const int colortex7Format = R11F_G11F_B10F; // scene
         const int colortex8Format = RG32UI; // gbuffer data 0: albedo (8:8:8), blockId (8), geoNormal (8:8), lightLevels (8:8) (solid -> deferred)
         const int colortex9Format = RG32UI; // gbuffer data 1: textureNormal (16:16), specularMap (8:8:8:8) (solid -> deferred)
-        
+        const int colortex11Format = R32F; // combined lod depth buffer
+
         const bool colortex1Clear = true;
         const bool colortex6Clear = false;
         const bool colortex7Clear = true;

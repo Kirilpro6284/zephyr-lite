@@ -21,9 +21,12 @@
     uniform usampler2D colortex9;
     uniform usampler2D colortex8;
 
+    uniform sampler2D colortex11;
     uniform sampler2D colortex7;
     uniform sampler2D colortex6;
     uniform sampler2D colortex1;
+
+    uniform sampler2D vxDepthTexOpaque;
 
     uniform sampler2D depthtex1;
 
@@ -36,6 +39,8 @@
     uniform mat4 gbufferModelView;
     uniform mat4 shadowModelView;
     
+    uniform mat4 vxViewProjInv;
+
     uniform vec3 shadowDir;
     uniform vec3 moonDir;
     uniform vec3 sunDir;
