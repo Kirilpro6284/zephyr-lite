@@ -10,12 +10,12 @@ void main ()
 {
     ivec2 texel = ivec2(gl_FragCoord.xy);
 
-    color = texelFetch(colortex1, ivec2(gl_FragCoord.xy), 0);
+    color = rcp(EXPONENT_BIAS) * texelFetch(colortex10, texel, 0);
 
     #ifdef DYNAMIC_EXPOSURE
-        float exposure = BRIGHTNESS * renderState.globalExposure;
+        float exposure = 0.1 / renderState.averageLuminance;
     #else
-        float exposure = 10.0;
+        float exposure = MANUAL_EXPOSURE;
     #endif
 
     color.rgb = tonemap(color.rgb, exposure) + blueNoise(gl_FragCoord.xy) * rcp(255.0) - rcp(510.0);

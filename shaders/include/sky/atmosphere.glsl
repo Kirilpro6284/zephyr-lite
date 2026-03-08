@@ -81,9 +81,9 @@
         uv.x = liftInv((sqrLength * invLength - planetRadius) / atmosphereHeight, -3.0);
         uv.y = liftInv((dot(pos, lightDir) * invLength + w) / (1.0 + w), -16.0);
 
-        if (saturate(uv) != uv) return vec3(0.0);
+        if (uv.y < 0.0) return vec3(0.0);
 
-        uv = rcp(256.0) * mix(vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT + SKY_TRANSMITTANCE_RES) - 0.5, uv);
+        uv = rcp(256.0) * mix(vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT + SKY_TRANSMITTANCE_RES) - 0.5, saturate(uv));
 
         return sqr(texture(scattering, uv).rgb);
     }
@@ -164,7 +164,7 @@
             opticalDepth += min1(float(i) + 0.5) * (alphaR * density.x + alphaM * density.y + alphaO * density.z);
 
             integratedData += exp(-opticalDepth) * (
-                (raySphere(rayPos, lightDir, planetRadius).x == INFINITY ? getTransmittance(rayPos, lightDir) * (betaR * phase.x * density.x + betaM * phase.y * density.y) : vec3(0.0)) 
+                getTransmittance(rayPos, lightDir) * (betaR * phase.x * density.x + betaM * phase.y * density.y) 
               + getMultipleScattering(rayPos, lightDir, rayHeight) * (betaR * isotropicPhase.x * density.x + betaM * isotropicPhase.y * density.y)
             );
         }

@@ -12,7 +12,7 @@
 layout (location = 0) out vec4 color;
 
 #define SSS_ENABLED
-#define SSS_INTENSITY 0.5  // [1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0 19.0 20.0 21.0 22.0 23.0 24.0 25.0 27.0 28.0 29.0 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0 40.0]
+#define SSS_INTENSITY 0.2  // [1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0 19.0 20.0 21.0 22.0 23.0 24.0 25.0 27.0 28.0 29.0 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0 40.0]
 #define SSS_ABSORPTION 16.0 // [1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0 9.5 10.0 10.5 11.0 11.5 12.0 12.5 13.0 13.5 14.0 14.5 15.0 15.5 16.0]
 #define SSS_PHASE 0.25     // [0.0 0.05 0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
 
@@ -55,7 +55,7 @@ void main ()
     vec3 playerPos = screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, depth).xyz;
 
     if (depth == 1.0) {
-        color.rgb = getAtmosphereScattering(normalize(playerPos));
+        color.rgb = EXPONENT_BIAS * getAtmosphereScattering(normalize(playerPos));
         return;
     }
     
@@ -81,6 +81,5 @@ void main ()
 
     if (blockId == 4) lighting += shadowLightBrightness * getSubsurfaceScattering(albedo.rgb, 1.0, dot(normalize(playerPos), shadowDir), blockerDepth);
 
-    color = vec4(lighting, 1.0);
-
+    color = vec4(EXPONENT_BIAS * lighting, 1.0);
 }

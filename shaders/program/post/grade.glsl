@@ -4,7 +4,11 @@
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
 
-/* RENDERTARGETS: 1 */
+/*
+    const bool colortex10MipmapEnabled = true;
+*/
+
+/* RENDERTARGETS: 10 */
 layout (location = 0) out vec4 color;
 
 const vec3 rodResponse = vec3(0.014, 0.270, 0.716);
@@ -21,9 +25,13 @@ void main ()
 {
     ivec2 texel = ivec2(gl_FragCoord.xy);
 
+    vec3 currData = rcp(EXPONENT_BIAS) * texelFetch(colortex10, texel, 0).rgb;
+
+    if (texel == ivec2(0)) renderState.averageLuminance = mix(renderState.averageLuminance, clamp(luminance(rcp(EXPONENT_BIAS) * textureLod(colortex10, vec2(0.5), 16.0).rgb), 0.002, 0.02), 0.02);
+
     #ifdef PURKINJE_EFFECT    
-        color = vec4(getPurkinjeShift(texelFetch(colortex1, texel, 0).rgb), 1.0);
-    #else
-        color = texelFetch(colortex1, texel, 0);
+        currData = getPurkinjeShift(currData).rgb;
     #endif
+
+    color = vec4(EXPONENT_BIAS * currData, 1.0);
 }
