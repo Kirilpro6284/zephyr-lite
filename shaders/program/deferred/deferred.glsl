@@ -22,7 +22,7 @@ vec3 getSubsurfaceScattering (vec3 albedo, float sssAmount, float mu, float sssD
 
     vec3 coeff = -SSS_ABSORPTION * exp(-0.75 * normalize(albedo)) / sssAmount;
 
-    vec3 s1 = 1.5 * vec3(0.94, 1.0, 0.76) * (luminance(albedo) + 0.02) * exp(3.0 * coeff * sssDepth + 3.0) * schlickPhase(mu, 0.5);
+    vec3 s1 = 0.5 * vec3(0.94, 1.0, 0.76) * (luminance(albedo) + 0.02) * exp(3.0 * coeff * sssDepth + 3.0) * schlickPhase(mu, 0.5);
     vec3 s2 = 8.0 * albedo * albedo * exp(0.5 * coeff * sssDepth + SSS_PHASE * mu);
 
     return getTransmittance(shadowDir) * SSS_INTENSITY * sssAmount * (s1 + s2);
@@ -39,7 +39,8 @@ void main ()
     vec4 normalData = unpackExp4x8(materialData.y);
 
     vec4 albedo = unpackUnorm4x8(materialData.x);
-    vec3 normal = octDecode(normalData.xy);
+    vec3 geoNormal = octDecode(normalData.xy);
+    vec3 textureNormal = octDecode(unpackExp2x16(materialData.z));
     vec4 specularData = unpackUnorm4x8(materialData.w);
 
     uint blockId = uint(albedo.a * 255.0 + 0.5);
@@ -71,7 +72,7 @@ void main ()
 
     float shadowLightBrightness = sunDir.y < 0.0 ? NIGHT_BRIGHTNESS : 1.0;
 
-    lighting += shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -normalize(playerPos), roughness, normal, albedo.rgb, f0) * getShadow(shadowViewPos, normal, dither
+    lighting += shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -normalize(playerPos), roughness, textureNormal, albedo.rgb, f0) * getShadow(shadowViewPos, geoNormal, dither
         #ifdef SHADOW_VPS
             , blockerDepth
         #endif

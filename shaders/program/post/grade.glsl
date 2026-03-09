@@ -12,13 +12,13 @@
 layout (location = 0) out vec4 color;
 
 const vec3 rodResponse = vec3(0.014, 0.270, 0.716);
-const float purkinjeBrightness = 2.5;
+const vec3 purkinjeTint = vec3(1.0, 1.625, 2.5);
 
 vec3 getPurkinjeShift (vec3 color)
 {
-    float purkinje = purkinjeBrightness * dot(color, rodResponse);
+    float purkinje = dot(color, rodResponse);
 
-    return mix(color, vec3(0.4, 0.65, 1.0) * purkinje, exp(-rcp(PURKINJE_AMOUNT) * 1250.0 * purkinje));
+    return mix(color, purkinjeTint * purkinje, exp(-rcp(PURKINJE_AMOUNT) * 3000.0 * purkinje));
 }
 
 void main ()

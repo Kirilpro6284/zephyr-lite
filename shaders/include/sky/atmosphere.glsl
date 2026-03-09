@@ -30,10 +30,7 @@
 
     const vec3 betaR = vec3(SKY_RAYLEIGH_R, SKY_RAYLEIGH_G, SKY_RAYLEIGH_B) * pow(vec3(680.0, 530.0, 440.0), vec3(-4.0)) * 1e6;
     const vec3 betaM = SKY_MIE * vec3(1e-5);
-    
-    const vec3 alphaR = betaR;
-    const vec3 alphaM = 0.6 * SKY_MIE * vec3(1e-5);
-    const vec3 alphaO = SKY_OZONE * vec3(1.9, 2.7, 0.1) * 1e-6;
+    const vec3 betaO = SKY_OZONE * vec3(1.9, 2.7, 0.1) * 1e-6;
     
     const vec2 isotropicPhase = vec2(6.0 * rcp(16.0 * PI), rcp(4.0 * PI));
 
@@ -161,9 +158,9 @@
             float rayHeight = length(rayPos);
 
             vec3 density = stepSize * getDensityAtHeight(rayHeight);
-            opticalDepth += min1(float(i) + 0.5) * (alphaR * density.x + alphaM * density.y + alphaO * density.z);
+            opticalDepth += -min1(float(i) + 0.5) * (betaR * density.x + betaM * density.y + betaO * density.z);
 
-            integratedData += exp(-opticalDepth) * (
+            integratedData += exp(opticalDepth) * (
                 getTransmittance(rayPos, lightDir) * (betaR * phase.x * density.x + betaM * phase.y * density.y) 
               + getMultipleScattering(rayPos, lightDir, rayHeight) * (betaR * isotropicPhase.x * density.x + betaM * isotropicPhase.y * density.y)
             );

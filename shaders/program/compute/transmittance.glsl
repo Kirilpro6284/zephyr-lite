@@ -31,5 +31,5 @@ void main ()
         opticalDepth += getDensityAtPoint(rayPos);
     } 
 
-    imageStore(imgScattering, SKY_TRANSMITTANCE_BOTTOM_LEFT + ivec2(gl_GlobalInvocationID.xy), vec4(exp(-0.5 * stepSize * (alphaR * opticalDepth.x + alphaM * opticalDepth.y + alphaO * opticalDepth.z)), 1.0));
+    imageStore(imgScattering, SKY_TRANSMITTANCE_BOTTOM_LEFT + ivec2(gl_GlobalInvocationID.xy), vec4(exp(-0.5 * stepSize * (betaR * opticalDepth.x + betaM * opticalDepth.y + betaO * opticalDepth.z)), 1.0));
 }

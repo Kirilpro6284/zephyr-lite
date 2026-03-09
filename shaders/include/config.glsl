@@ -11,6 +11,7 @@
     #define SHADOW_VPS
 
     #define DYNAMIC_EXPOSURE
+    #define ADAPTATION_SPEED 0.02
     #define MANUAL_EXPOSURE 10.0
 
     #define SHADOW_DISTORTION 0.95

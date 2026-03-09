@@ -17,7 +17,7 @@ void main ()
 {
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
     
-    colortex1Out = albedo;
+    colortex1Out = vec4(pow(albedo.rgb, vec3(2.2)), albedo.a);
 
     if (albedo.a < alphaTestRef) discard;
 }
