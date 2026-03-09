@@ -36,10 +36,8 @@
     const vec3 shadowProjScale = vec3(rcp(shadowDistance), rcp(shadowDistance), -rcp(shadowDepthDist));
     const vec3 shadowProjScaleInv = vec3(shadowDistance, shadowDistance, -shadowDepthDist);
 
-    layout (std430, binding = 0) buffer render_state
-    {
-        float averageLuminance;
-    } renderState;
+    const ivec3 voxelVolumeSize = ivec3(128, 128, 128);
+    const ivec3 halfVoxelVolumeSize = ivec3(64, 64, 64);
 
     void applySpecularMap (vec4 specularData, inout vec3 albedo, out vec3 f0, out float roughness, out float emission) 
     {

@@ -3,22 +3,20 @@
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
 #include "/include/lighting/shadowMapping.glsl"
+#include "/include/lighting/floodfill.glsl"
 
 uniform float alphaTestRef = 0.1;
 
 #ifdef fsh
 
-in float geometryId;
 in vec2 texcoord;
-//in vec2 lightLevels;
 in vec3 vertexColor;
 in vec3 vertexNormal;
 
 layout (location = 0) out vec4 shadowcolor0Out;
 layout (location = 1) out vec4 shadowcolor1Out;
 
-void main ()
-{
+void main () {
     vec4 albedo = texture(gtexture, texcoord);
 
     albedo.rgb *= vertexColor;
@@ -33,26 +31,38 @@ void main ()
 
 #ifdef vsh
 
+attribute vec4 at_midBlock;
 attribute vec2 mc_Entity;
 
-out float geometryId;
 out vec2 texcoord;
-//out vec2 lightLevels;
 out vec3 vertexColor;
 out vec3 vertexNormal;
 
-void main ()
-{
-    gl_Position = vec4(shadowProjScale, 1.0) * (gl_ModelViewMatrix * gl_Vertex);
+void main () {
+    vec3 shadowViewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
+   
+    gl_Position = vec4(shadowProjScale * shadowViewPos, 1.0);
 
     gl_Position.xy = distortShadowPos(gl_Position.xy);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
-    //lightLevels = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
     vertexColor = gl_Color.rgb;
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
 
-    geometryId = mc_Entity.x;
+    #ifdef COLORED_LIGHTING
+        if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID) {
+            vec3 playerPos = (shadowModelViewInverse * vec4(shadowViewPos, 1.0)).xyz;
+            ivec3 voxelPos = playerToVoxelPos(playerPos + at_midBlock.xyz * rcp(64.0));
+
+            if (inVoxelBounds(voxelPos)) {
+                uint voxelData = uint(mc_Entity.x) & 255u;
+
+                if (voxelData < 16u || voxelData > 63u) voxelData = 1u;
+
+                imageStore(voxelBuffer, voxelPos, uvec4(voxelData, 0u, 0u, 1u));
+            }
+        }
+    #endif
 }
 
 #endif

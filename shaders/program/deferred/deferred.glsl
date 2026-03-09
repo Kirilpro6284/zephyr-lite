@@ -7,6 +7,7 @@
 #include "/include/utility/brdf.glsl"
 #include "/include/lighting/shadowMapping.glsl"
 #include "/include/sky/atmosphere.glsl"
+#include "/include/lighting/floodfill.glsl"
 
 /* RENDERTARGETS: 7 */
 layout (location = 0) out vec4 color;
@@ -81,6 +82,8 @@ void main ()
     lighting += normalData.w * normalData.w * albedo.rgb * getAtmosphereScattering(vec3(0.0, 1.0, 0.0));
 
     if (blockId == 4) lighting += shadowLightBrightness * getSubsurfaceScattering(albedo.rgb, 1.0, dot(normalize(playerPos), shadowDir), blockerDepth);
+
+    lighting += albedo.rgb * getLighting(playerPos + geoNormal * 0.5);
 
     color = vec4(EXPONENT_BIAS * lighting, 1.0);
 }

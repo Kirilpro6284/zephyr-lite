@@ -1,7 +1,17 @@
 #ifndef INCLUDE_UNIFORMS
     #define INCLUDE_UNIFORMS
 
+    layout (std430, binding = 0) buffer render_state
+    {
+        float averageLuminance;
+    } renderState;
+
+    layout (r8ui) uniform uimage3D voxelBuffer;
+    layout (rgba16f) uniform image3D lightBuffer;
     layout (rgba16f) uniform image2D imgScattering;
+
+    uniform usampler3D voxelSampler;
+    uniform sampler3D lightSampler;
     uniform sampler2D scattering;
 
     uniform sampler3D depthtex2;
@@ -47,6 +57,8 @@
     uniform vec3 moonDir;
     uniform vec3 sunDir;
 
+    uniform vec3 cameraPositionFract;
+    uniform vec3 playerLookVector;
     uniform vec3 cameraVelocity;
 
     uniform vec2 internalScreenSize;
@@ -58,6 +70,10 @@
 
     uniform float eyeAltitude;
     
+    uniform ivec3 previousCameraPositionInt;
+    uniform ivec3 cameraPositionInt;
+
     uniform int frameCounter;
+    uniform int renderStage;
 
 #endif

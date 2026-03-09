@@ -11,6 +11,10 @@
 
     const bool shadowHardwareFiltering = true;
 
+    #ifdef COLORED_LIGHTING
+        const float voxelDistance = 32.0;
+    #endif
+
     /*  
         const int colortex1Format = RGBA16F; // translucent objects (translucent -> composite)
         const int colortex6Format = RGBA16F; // TAA history (temporal)
