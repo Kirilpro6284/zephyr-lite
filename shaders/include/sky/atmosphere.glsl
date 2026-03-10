@@ -14,8 +14,8 @@
 
     #define ALTITUDE_BIAS 512.0
 
-    #define SKY_TRANSMITTANCE_BOTTOM_LEFT ivec2(160, 128)
-    #define SKY_MS_BOTTOM_LEFT ivec2(128, 128)
+    #define SKY_TRANSMITTANCE_BOTTOM_LEFT ivec2(160, 224)
+    #define SKY_MS_BOTTOM_LEFT ivec2(128, 224)
     #define SKY_VIEW_BOTTOM_LEFT ivec2(0, 128)
 
     #define SKY_TRANSMITTANCE_RES ivec2(32, 32)

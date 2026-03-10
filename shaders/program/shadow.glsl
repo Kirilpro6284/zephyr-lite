@@ -50,14 +50,14 @@ void main () {
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
 
     #ifdef COLORED_LIGHTING
-        if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID) {
+        if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT) {
             vec3 playerPos = (shadowModelViewInverse * vec4(shadowViewPos, 1.0)).xyz;
             ivec3 voxelPos = playerToVoxelPos(playerPos + at_midBlock.xyz * rcp(64.0));
 
             if (inVoxelBounds(voxelPos)) {
                 uint voxelData = uint(mc_Entity.x) & 255u;
 
-                if (voxelData < 16u || voxelData > 63u) voxelData = 1u;
+                if (voxelData < 16u || voxelData > 63u) voxelData = uint(renderStage == MC_RENDER_STAGE_TERRAIN_SOLID);
 
                 imageStore(voxelBuffer, voxelPos, uvec4(voxelData, 0u, 0u, 1u));
             }

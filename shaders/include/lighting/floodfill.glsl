@@ -1,22 +1,41 @@
 #ifndef INCLUDE_LIGHTING_FLOODFILL
     #define INCLUDE_LIGHTING_FLOODFILL
 
-    const float blocklightFill = 0.9;
+    const float blocklightFill = 0.95;
     const float centerWeight = 0.2;
 
+    const vec3[16] tintColors = vec3[16] (
+        vec3(0.9, 0.9, 0.9), // White
+        vec3(1.0, 0.8, 0.4), // Orange
+        vec3(1.0, 0.5, 0.9), // Magenta
+        vec3(0.7, 0.8, 1.0), // Light blue
+        vec3(1.0, 0.9, 0.5), // Yellow
+        vec3(0.6, 1.0, 0.5), // Lime
+        vec3(1.0, 0.5, 0.4), // Pink
+        vec3(0.4, 0.4, 0.4), // Gray
+        vec3(0.7, 0.7, 0.7), // Light gray
+        vec3(0.5, 0.9, 1.0), // Cyan
+        vec3(0.9, 0.4, 1.0), // Purple
+        vec3(0.3, 0.4, 1.0), // Blue
+        vec3(1.0, 0.5, 0.3), // Brown
+        vec3(0.3, 0.5, 0.1), // Green
+        vec3(1.0, 0.2, 0.1), // Red
+        vec3(0.1, 0.1, 0.1) // Black
+    );
+
     const vec3[32] lightColors = vec3[32] (
-        vec3(0.95, 0.9, 1.0),
-        vec3(1.0, 0.72, 0.6),
-        vec3(1.0, 0.12, 0.03) * 0.2,
-        vec3(1.0, 0.65, 0.5),
-        vec3(1.0, 0.5, 0.3),
-        vec3(0.15, 0.4, 0.8) * 0.05,
-        vec3(0.5, 0.7, 0.6),
-        vec3(0.5, 0.7, 0.6) * 0.5,
-        vec3(0.5, 0.7, 0.6) * 0.25,
-        vec3(0.5, 0.7, 0.6) * 0.125,
-        vec3(0.7, 0.6, 0.8),
-        vec3(0.0),
+        vec3(0.95, 0.9, 1.0), // Sea lantern
+        vec3(1.0, 0.72, 0.6), // Glowstone, ochre froglight
+        vec3(1.0, 0.12, 0.03) * 0.2, // Redstone
+        vec3(1.0, 0.65, 0.5), // Torch, campfire, lantern
+        vec3(1.0, 0.4, 0.2), // Shroomlight, lava
+        vec3(0.15, 0.4, 0.8) * 0.04, // Soul torch, campfire, lantern
+        vec3(0.5, 0.7, 0.6), // Copper torch, lantern, verdant froglight
+        vec3(0.5, 0.7, 0.6) * 0.5, // Exposed copper lantern
+        vec3(0.5, 0.7, 0.6) * 0.25, // Weathered copper lantern
+        vec3(0.5, 0.7, 0.6) * 0.125, // Oxidized copper lantern
+        vec3(0.7, 0.6, 0.8), // Pearlescent froglight
+        vec3(0.8, 0.7, 0.68), // End rod
         vec3(0.0),
         vec3(0.0),
         vec3(0.0),
@@ -51,7 +70,7 @@
         uint voxelData = texelFetch(voxelSampler, voxelPos, 0).r;
 
         if (voxelData == 0u) return vec4(1.0, 1.0, 1.0, 0.0);
-        else if (voxelData > 15u && voxelData < 32u) return vec4(0.5, 0.5, 0.5, 0.0);
+        else if (voxelData > 15u && voxelData < 32u) return vec4(tintColors[voxelData & 15u], 0.0);
         else if (voxelData > 31u && voxelData < 64u) return vec4(lightColors[voxelData & 31u], 1.0);
         else return vec4(0.0);
     }

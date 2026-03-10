@@ -69,7 +69,7 @@
     uniform vec2 texelSize; 
 
     uniform float eyeAltitude;
-    
+
     uniform ivec3 previousCameraPositionInt;
     uniform ivec3 cameraPositionInt;
 

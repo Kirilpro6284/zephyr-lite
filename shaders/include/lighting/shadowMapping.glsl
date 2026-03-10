@@ -50,7 +50,7 @@
             float sampleDist = SHADOW_BLOCKER_RADIUS * sqrt(fract(0.4301597 * i + dither.y));
             state *= factor;
 
-            blockerDepth += max0(shadowProjScaleInv.z * (texture(shadowtex0, distortShadowPos(shadowProjScale.xy * (shadowViewPos.xy + sampleDist * state)) * 0.5 + 0.5).r * 2.0 - 1.0) - shadowViewPos.z);
+            blockerDepth += clamp(shadowProjScaleInv.z * (texture(shadowtex0, distortShadowPos(shadowProjScale.xy * (shadowViewPos.xy + sampleDist * state)) * 0.5 + 0.5).r * 2.0 - 1.0) - shadowViewPos.z, 0.0, SHADOW_MAX_BLOCKER_DEPTH);
         }
 
         return blockerDepth * rcp(SHADOW_BLOCKER_SAMPLES);
@@ -74,7 +74,7 @@
 
         vec3 shadowViewNormal = mat3(shadowModelView) * normal;
 
-        float penumbraSize = min(SHADOW_MAX_BLOCKER_DEPTH, blockerDepth) * SHADOW_SOFTNESS;
+        float penumbraSize = blockerDepth * SHADOW_SOFTNESS;
 
         #ifdef SHADOW_VPS
             float kernelRadius = shadowProjScale.x * max(SHADOW_SMOOTHING * biasAmount, penumbraSize);
@@ -94,10 +94,7 @@
             float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + dither.y));
             state *= factor;
 
-            vec2 offset = distortDiff * sampleDist * state;
-            float depthBias = clamp(-0.5 * shadowProjScale.z * shadowProjScaleInv.x * dot(offset, shadowViewNormal.xy) / shadowViewNormal.z, shadowProjScale.z, 0.0);
-
-            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + offset, shadowPos.z + depthBias) * 0.5 + 0.5).r;
+            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + distortDiff * sampleDist * state, shadowPos.z) * 0.5 + 0.5).r;
         }
 
         integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), shadowSharpening));
@@ -111,13 +108,10 @@
                 float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + dither.y));
                 state *= factor;
 
-                vec2 offset = distortDiff * sampleDist * state;
-                float depthBias = clamp(-0.5 * shadowProjScale.z * shadowProjScaleInv.x * dot(offset, shadowViewNormal.xy) / shadowViewNormal.z, shadowProjScale.z, 0.0);
-
-                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + offset) * 0.5 + 0.5));
+                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + distortDiff * sampleDist * state) * 0.5 + 0.5));
 
                 vec4 sampleColor = texelFetch(shadowcolor0, sampleTexel, 0);
-                float sampleDepth = step((shadowPos.z + depthBias) * 0.5 + 0.5, texelFetch(shadowtex0, sampleTexel, 0).x);
+                float sampleDepth = step((shadowPos.z) * 0.5 + 0.5, texelFetch(shadowtex0, sampleTexel, 0).x);
 
                 if (sampleColor.a > 0.99 && sampleDepth == 0.0) continue;
                 
