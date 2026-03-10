@@ -9,7 +9,16 @@
 #include "/include/lighting/floodfill.glsl"
 
 layout (local_size_x = 8, local_size_y = 8) in;
-const ivec3 workGroups = ivec3(16, 16, 128);
+
+#if VOXELIZATION_DISTANCE == 64
+    const ivec3 workGroups = ivec3(16, 16, 128);
+#elif VOXELIZATION_DISTANCE == 128
+    const ivec3 workGroups = ivec3(32, 32, 256);
+#elif VOXELIZATION_DISTANCE == 192
+    const ivec3 workGroups = ivec3(48, 48, 384);
+#elif VOXELIZATION_DISTANCE == 256
+    const ivec3 workGroups = ivec3(64, 64, 512);
+#endif
 
 void main ()
 {

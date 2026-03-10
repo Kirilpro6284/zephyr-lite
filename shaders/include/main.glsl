@@ -36,8 +36,19 @@
     const vec3 shadowProjScale = vec3(rcp(shadowDistance), rcp(shadowDistance), -rcp(shadowDepthDist));
     const vec3 shadowProjScaleInv = vec3(shadowDistance, shadowDistance, -shadowDepthDist);
 
-    const ivec3 voxelVolumeSize = ivec3(128, 128, 128);
-    const ivec3 halfVoxelVolumeSize = ivec3(64, 64, 64);
+    #if VOXELIZATION_DISTANCE == 64
+        const ivec3 voxelVolumeSize = ivec3(128, 128, 128);
+        const ivec3 halfVoxelVolumeSize = ivec3(64, 64, 64);
+    #elif VOXELIZATION_DISTANCE == 128
+        const ivec3 voxelVolumeSize = ivec3(256, 256, 256);
+        const ivec3 halfVoxelVolumeSize = ivec3(128, 128, 128);
+    #elif VOXELIZATION_DISTANCE == 192
+        const ivec3 voxelVolumeSize = ivec3(384, 384, 384);
+        const ivec3 halfVoxelVolumeSize = ivec3(192, 192, 192);
+    #elif VOXELIZATION_DISTANCE == 256
+        const ivec3 voxelVolumeSize = ivec3(512, 512, 512);
+        const ivec3 halfVoxelVolumeSize = ivec3(256, 256, 256);
+    #endif
 
     void applySpecularMap (vec4 specularData, inout vec3 albedo, out vec3 f0, out float roughness, out float emission) 
     {

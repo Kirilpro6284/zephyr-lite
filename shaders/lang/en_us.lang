@@ -8,6 +8,8 @@ option.TAA                 = TAA
 option.TEMPORAL_UPSAMPLING = Temporal Upsampling
 option.PURKINJE_EFFECT     = Purkinje Effect
 option.PURKINJE_AMOUNT     = Purkinje Amount
+option.COLORED_LIGHTING    = Colored Lighting
+option.VOXELIZATION_DISTANCE = Voxel Volume Size
 
 value.TONEMAP_OPERATOR.0 = AgX
 value.TONEMAP_OPERATOR.1 = Lottes

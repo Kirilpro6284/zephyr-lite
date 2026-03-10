@@ -95,7 +95,7 @@
         ivec3 voxelPos = playerToVoxelPos(playerPos);
 
         if (!inVoxelBounds(voxelPos)) return vec3(0.0);
-        else return texture(lightSampler, rcp(vec3(128.0, 128.0, 256.0)) * vec3(cameraPositionFract + playerPos + halfVoxelVolumeSize + ivec3(0, 0, voxelVolumeSize.z * ((frameCounter & 1) ^ 1)))).rgb;
+        else return texture(lightSampler, rcp(vec3(voxelVolumeSize) * vec3(1.0, 1.0, 2.0)) * vec3(cameraPositionFract + playerPos + halfVoxelVolumeSize + ivec3(0, 0, voxelVolumeSize.z * ((frameCounter & 1) ^ 1)))).rgb;
     }
 
 #endif
