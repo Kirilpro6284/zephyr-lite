@@ -38,16 +38,16 @@
         }
     #endif
 
-    float getBlockerDepth (vec3 shadowViewPos, vec2 dither)
+    float getBlockerDepth (vec3 shadowViewPos, float dither)
     {
         float blockerDepth = 0.0;
 
         mat2 factor = rotate(0.2451223 * TWO_PI);
-        vec2 state = vec2(sin(dither.x * TWO_PI), cos(dither.x * TWO_PI));
+        vec2 state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
 
         for (int i = 0; i < SHADOW_BLOCKER_SAMPLES; i++) 
         {
-            float sampleDist = SHADOW_BLOCKER_RADIUS * sqrt(fract(0.4301597 * i + dither.y));
+            float sampleDist = SHADOW_BLOCKER_RADIUS * sqrt(fract(0.4301597 * i + 0.5));
             state *= factor;
 
             blockerDepth += clamp(shadowProjScaleInv.z * (texture(shadowtex0, distortShadowPos(shadowProjScale.xy * (shadowViewPos.xy + sampleDist * state)) * 0.5 + 0.5).r * 2.0 - 1.0) - shadowViewPos.z, 0.0, SHADOW_MAX_BLOCKER_DEPTH);
@@ -56,7 +56,7 @@
         return blockerDepth * rcp(SHADOW_BLOCKER_SAMPLES);
     }
 
-    vec3 getShadow (vec3 shadowViewPos, vec3 normal, vec2 dither
+    vec3 getShadow (vec3 shadowViewPos, vec3 normal, float dither
         #ifdef SHADOW_VPS
             , float blockerDepth
         #endif
@@ -87,11 +87,11 @@
         vec4 integratedData = vec4(0.0);
 
         mat2 factor = rotate(0.2451223 * TWO_PI);
-        vec2 state = vec2(sin(dither.x * TWO_PI), cos(dither.x * TWO_PI));
+        vec2 state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
 
         for (int i = 0; i < SHADOW_SAMPLES; i++)
         {
-            float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + dither.y));
+            float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
             state *= factor;
 
             integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + distortDiff * sampleDist * state, shadowPos.z) * 0.5 + 0.5).r;
@@ -100,12 +100,12 @@
         integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), shadowSharpening));
 
         #ifdef COLORED_SHADOWS
-            state = vec2(sin(dither.x * TWO_PI), cos(dither.x * TWO_PI));
+            state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
             float kernelSum = 0.0;
 
             for (int i = 0; i < SHADOW_SAMPLES; i++)
             {
-                float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + dither.y));
+                float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
                 state *= factor;
 
                 ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + distortDiff * sampleDist * state) * 0.5 + 0.5));

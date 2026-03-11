@@ -19,7 +19,7 @@ const ivec3 workGroups = ivec3(4, 4, 1);
 void main ()
 {
     ivec2 texel = ivec2(gl_GlobalInvocationID.xy);
-    uint state = gl_GlobalInvocationID.x + 32u * gl_GlobalInvocationID.y + 32u * 32u * (frameCounter & 255u);
+    uint state = gl_GlobalInvocationID.x + 32u * gl_GlobalInvocationID.y + 32u * 32u * (frameCounter & 31u);
 
     vec2 uv = vec2(gl_GlobalInvocationID.xy) * rcp(31.0);
 
@@ -28,7 +28,7 @@ void main ()
     float lightDot = lift(uv.y * 2.0 - 1.0, -1.5);
     vec3 lightDir = vec3(sqrt(1.0 - lightDot * lightDot), lightDot, 0.0);
 
-    vec3 prevData = texelFetch(scattering, SKY_MS_BOTTOM_LEFT + texel, 0).rgb;
+    vec3 prevData = decodeRgbe8(texelFetch(scattering, SKY_MS_BOTTOM_LEFT + texel, 0));
     vec3 integratedData = vec3(0.0);
 
     for (int i = 0; i < MULTIPLE_SCATTERING_SAMPLES; i++) {
@@ -39,5 +39,5 @@ void main ()
 
     if (any(isnan(integratedData))) integratedData = vec3(0.0);
 
-    imageStore(imgScattering, SKY_MS_BOTTOM_LEFT + texel, vec4(mix(prevData, integratedData, rcp(min(frameCounter, 256))), 1.0));
+    imageStore(imgScattering, SKY_MS_BOTTOM_LEFT + texel, encodeRgbe8(mix(prevData, integratedData, rcp(min(frameCounter, 64)))));
 }

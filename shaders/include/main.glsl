@@ -14,8 +14,6 @@
     #define luminance(c) dot(c, vec3(0.2126, 0.7152, 0.0722))
     #define torad(x)     (0.01745329 * x)
     #define hermite(x)   smoothstep(0.0, 1.0, x)
-
-    #define EXPONENT_BIAS 128.0
     
     #if TEMPORAL_UPSAMPLING == 100
         #define TAAU_RENDER_SCALE 1.0
@@ -102,6 +100,18 @@
         return x * (1.0 - a) / (1.0 - abs(x) * a);
     }
 
+    float linearWeight (float coord, float offset) {
+        return 1.0 - abs(fract(coord) - offset);
+    }
+
+    float bilinearWeight (vec2 coord, vec2 offset) {
+        return linearWeight(coord.x, offset.x) * linearWeight(coord.y, offset.y);
+    }
+
+    float trilinearWeight (vec3 coord, vec3 offset) {
+        return bilinearWeight(coord.xy, offset.xy) * linearWeight(coord.z, offset.z);
+    }
+
     // Adapted from https://www.youtube.com/watch?v=Qz0KTGYJtUk&t=674s
 
     uint randomInt (inout uint state)
@@ -166,9 +176,13 @@
             texelFetch(colortex9, texel, 0).rg
         );
     }
+    
+    float getInterleavedGradientNoise (vec2 coord) { 
+        return fract(fract(dot(floor(coord), vec2(3.5557133, 0.3092692))) + 1.6180339 * float(frameCounter & 127)); 
+    }
 
     // https://discordapp.com/channels/237199950235041794/525510804494221312/1416364500591837216
-    vec3 blueNoise (vec2 coord) 
+    vec3 getBlueNoise (vec2 coord) 
     {
         return texelFetch(
             noisetex,
@@ -180,11 +194,11 @@
     // R2 sequence from
     // https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
 
-    vec3 blueNoise (vec2 coord, int i) 
+    vec3 getBlueNoise (vec2 coord, int i) 
     {
         const float g = 1.324717;
 
-        return blueNoise(coord + 128.0 * fract(0.5 + i * (1.0 / vec2(g, g * g))));
+        return getBlueNoise(coord + 128.0 * fract(0.5 + i * (1.0 / vec2(g, g * g))));
     }
 #endif
 

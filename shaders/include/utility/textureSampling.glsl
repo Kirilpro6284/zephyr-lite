@@ -1,6 +1,38 @@
 #ifndef INCLUDE_TEXTURE_SAMPLING
     #define INCLUDE_TEXTURE_SAMPLING
 
+    #include "/include/utility/packing.glsl"
+
+    vec3 textureRgbe8 (sampler2D rgbeSampler, vec2 uv, vec2 texSize) {
+        vec2 coord = texSize * uv - 0.5;
+        ivec2 texel = ivec2(coord);
+
+        vec3 result = vec3(0.0);
+
+        for (int i = 0; i < 4; i++) {
+            ivec2 offset = ivec2(i >> 1, i) & ivec2(1);
+
+            result += bilinearWeight(coord, vec2(offset)) * decodeRgbe8(texelFetch(rgbeSampler, texel + offset, 0));
+        }
+
+        return result;
+    }
+
+    vec3 textureRgbe8 (sampler3D rgbeSampler, vec3 uv, vec3 texSize) {
+        vec3 coord = texSize * uv - 0.5;
+        ivec3 texel = ivec3(coord);
+
+        vec3 result = vec3(0.0);
+
+        for (int i = 0; i < 8; i++) {
+            ivec3 offset = ivec3(i >> 2, i >> 1, i) & ivec3(1);
+
+            result += trilinearWeight(coord, vec3(offset)) * decodeRgbe8(texelFetch(rgbeSampler, texel + offset, 0));
+        }
+
+        return result;
+    }
+
     // The following code is licensed under the MIT license: https://gist.github.com/TheRealMJP/bc503b0b87b643d3505d41eab8b332ae
 
     /*

@@ -41,21 +41,21 @@ void main ()
     vec3 playerPos = screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, depth).xyz;
 
     if (depth == 1.0) {
-        color.rgb = EXPONENT_BIAS * getAtmosphereScattering(normalize(playerPos));
+        color = encodeRgbe8(getAtmosphereScattering(normalize(playerPos)));
         return;
     }
     
-    vec2 dither = blueNoise(gl_FragCoord.xy).rg;
+    float dither = getInterleavedGradientNoise(gl_FragCoord.xy);
 
-    color = vec4(EXPONENT_BIAS * getSceneLighting(
+    color = encodeRgbe8(getSceneLighting(
         playerPos, 
         dither, 
-        roughness, 
+        0.85, 
         blockId == 4 ? 1.0 : 0.0,
         geoNormal, 
         textureNormal, 
         albedo.rgb, 
-        f0, 
+        vec3(0.1), 
         adjustLightLevels(normalData.zw)
-    ), 1.0);
+    ));
 }

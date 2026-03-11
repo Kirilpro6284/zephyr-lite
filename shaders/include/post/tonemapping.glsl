@@ -165,26 +165,24 @@
         return (x * (1.0 + x / (L_white * L_white))) / (1.0 + x);
     }
 
-    vec3 exponential (vec3 color, float exposure) 
-    {
+    vec3 exponential (vec3 color, float exposure) {
         return 1.0 - exp(-exposure * color);
     }
 
     // This is done this way because for some reason hardware interpolation causes color banding
-    vec3 tonyMcMapface (vec3 color) 
-    {
-        vec3 texel = 47.0 * color / (color + 1.0);
-        vec3 samples = vec3(0.0);
+    vec3 tonyMcMapface (vec3 color) {
+        vec3 coord = 47.0 * color / (color + 1.0);
+        ivec3 texel = ivec3(coord);
+
+        vec3 result = vec3(0.0);
 
         for (int i = 0; i < 8; i++) {
             ivec3 offset = ivec3(i >> 2, i >> 1, i) & ivec3(1);
 
-            samples += texelFetch(depthtex2, ivec3(texel) + offset, 0).rgb * (1.0 - abs(fract(texel.x) - offset.x)) 
-                                                                           * (1.0 - abs(fract(texel.y) - offset.y))
-                                                                           * (1.0 - abs(fract(texel.z) - offset.z));
+            result += trilinearWeight(coord, vec3(offset)) * texelFetch(depthtex2, texel + offset, 0).rgb;
         }
 
-        return samples;
+        return result;
     }
 
     #if TONEMAP_OPERATOR == 0

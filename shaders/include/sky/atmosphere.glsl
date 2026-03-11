@@ -1,6 +1,8 @@
 #ifndef INCLUDE_ATMOSPHERE
     #define INCLUDE_ATMOSPHERE
 
+    #include "/include/utility/textureSampling.glsl"
+
     #define SKY_RAYLEIGH_R 1.0
     #define SKY_RAYLEIGH_G 1.0
     #define SKY_RAYLEIGH_B 1.25
@@ -99,7 +101,7 @@
 
         uv = rcp(256.0) * mix(vec2(SKY_MS_BOTTOM_LEFT) + 0.5, vec2(SKY_MS_BOTTOM_LEFT + SKY_MS_RES) - 0.5, saturate(uv));
 
-        return texture(scattering, uv).rgb;
+        return textureRgbe8(scattering, uv, vec2(256.0));
     }
 
     vec3 getAtmosphereScattering (vec3 rayDir)
@@ -114,7 +116,7 @@
 
         uv = rcp(256.0) * mix(vec2(SKY_VIEW_BOTTOM_LEFT) + 0.5, vec2(SKY_VIEW_BOTTOM_LEFT + SKY_VIEW_RES) - 0.5, saturate(uv));
 
-        return texture(scattering, uv).rgb;
+        return textureRgbe8(scattering, uv, vec2(256.0));
     }
 
     float rayleighPhase (float cosTheta)

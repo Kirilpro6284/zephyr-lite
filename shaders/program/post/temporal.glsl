@@ -3,6 +3,7 @@
 #include "/include/main.glsl"
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
+#include "/include/utility/packing.glsl"
 
 /* RENDERTARGETS: 6,10 */
 layout (location = 0) out vec4 history;
@@ -20,9 +21,9 @@ void main ()
         ivec2 dstTexel = srcTexel;
     #endif
 
-    vec4 currData = rcp(EXPONENT_BIAS) * texelFetch(colortex7, srcTexel, 0);
+    vec3 currData = decodeRgbe8(texelFetch(colortex7, srcTexel, 0));
     
-    color = currData;
+    color = vec4(currData, 1.0);
 
     vec2 uv = texelSize * gl_FragCoord.xy;
     float depth = texelFetch(depthtex1, srcTexel, 0).r;
@@ -51,7 +52,7 @@ void main ()
 
             for (int x = -1; x <= 1; x++) 
                 for (int y = -1; y <= 1; y++) {
-                    vec3 sampleData = rcp(EXPONENT_BIAS) * texelFetch(colortex7, clamp(srcTexel + ivec2(x, y), ivec2(0), ivec2(internalScreenSize) - 1), 0).rgb;
+                    vec3 sampleData = decodeRgbe8(texelFetch(colortex7, clamp(srcTexel + ivec2(x, y), ivec2(0), ivec2(internalScreenSize) - 1), 0));
 
                     colorMin = min(colorMin, sampleData);
                     colorMax = max(colorMax, sampleData);
@@ -62,17 +63,10 @@ void main ()
 
             float alpha = rcp(prevData.w);
 
-            history.rgb = -log(
-                mix(
-                    exp(-prevData.rgb), 
-                    exp(-currData.rgb), 
-                    isUnderSample && prevData.w > 1.0 ? 0.0005 : alpha
-                )
-            );
-
+            history.rgb = mix(prevData.rgb, currData.rgb, isUnderSample && prevData.w > 1.0 ? 0.0005 : alpha);
             history.w = prevData.w + (isUnderSample ? 0.0005 : 1.0);
         } else history = vec4(currData.rgb, TAA_TEMPORAL_W_CLAMP);
     } else history = vec4(currData.rgb, 1.0);
 
-    color = any(isnan(history)) ? vec4(0.0) : (EXPONENT_BIAS * history);
+    color = any(isnan(history)) ? vec4(0.0) : encodeRgbe8(history.rgb);
 }

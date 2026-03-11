@@ -29,9 +29,9 @@ void main ()
 
     albedo.rgb = pow(albedo.rgb, vec3(2.2));
 
-    colortex1Out.rgb = EXPONENT_BIAS * getSceneLighting(
+    colortex1Out.rgb = getSceneLighting(
         playerPos, 
-        blueNoise(gl_FragCoord.xy).rg, 
+        getBlueNoise(gl_FragCoord.xy).r, 
         0.2,
         0.5,
         vertexNormal,

@@ -26,7 +26,7 @@ void main ()
 
     vec4 voxelData = getVoxelData(voxel);
 
-    vec3 light = mix(voxelData.rgb * spreadLight(voxel + cameraPositionInt - previousCameraPositionInt), voxelData.rgb, voxelData.a);
+    vec3 light = mix(voxelData.rgb * spreadLight(clamp(voxel + cameraPositionInt - previousCameraPositionInt, ivec3(0), voxelVolumeSize - 1)), voxelData.rgb, voxelData.a);
 
-    imageStore(lightBuffer, voxel + ivec3(0, 0, voxelVolumeSize.z * ((frameCounter & 1) ^ 1)), vec4(light, 1.0));
+    imageStore(lightBuffer, voxel + ivec3(0, 0, voxelVolumeSize.z * ((frameCounter & 1) ^ 1)), encodeRgbe8(light));
 }

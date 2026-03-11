@@ -1,7 +1,6 @@
 #include "/include/uniforms.glsl"
 #include "/include/config.glsl"
 #include "/include/main.glsl"
-#include "/include/utility/packing.glsl"
 #include "/include/lighting/shadowMapping.glsl"
 #include "/include/lighting/floodfill.glsl"
 
@@ -13,6 +12,7 @@ in vec2 texcoord;
 in vec3 vertexColor;
 in vec3 vertexNormal;
 
+/* RENDERTARGETS: 0,1 */
 layout (location = 0) out vec4 shadowcolor0Out;
 layout (location = 1) out vec4 shadowcolor1Out;
 
@@ -24,7 +24,7 @@ void main () {
     shadowcolor0Out = albedo;
     shadowcolor1Out = vec4(0.0);
 
-    if (albedo.a < alphaTestRef) discard;
+    if (renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT && albedo.a < alphaTestRef) discard;
 }
 
 #endif

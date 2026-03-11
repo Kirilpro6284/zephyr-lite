@@ -21,7 +21,7 @@ vec2 adjustLightLevels (vec2 lightLevels) {
 
 vec3 getSceneLighting (
     vec3 playerPos,
-    vec2 dither,
+    float dither,
     float roughness, 
     float sssAmount,
     vec3 geoNormal,
@@ -40,7 +40,7 @@ vec3 getSceneLighting (
 
     float shadowLightBrightness = sunDir.y < 0.0 ? NIGHT_BRIGHTNESS : 1.0;
 
-    lighting += shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -normalize(playerPos), roughness, textureNormal, albedo.rgb, f0) * getShadow(shadowViewPos, geoNormal, dither
+    lighting += exp(-sssAmount) * shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -normalize(playerPos), roughness, textureNormal, albedo.rgb, f0) * getShadow(shadowViewPos, geoNormal, dither
         #ifdef SHADOW_VPS
             , blockerDepth
         #endif
@@ -48,7 +48,7 @@ vec3 getSceneLighting (
 
     lighting += lightLevels.y * albedo.rgb * getAtmosphereScattering(vec3(0.0, 1.0, 0.0));
     lighting += shadowLightBrightness * getSubsurfaceScattering(albedo.rgb, sssAmount, dot(normalize(playerPos), shadowDir), blockerDepth);
-    lighting += albedo.rgb * getLighting(playerPos + geoNormal * 0.5);
+    lighting += albedo.rgb * getBlocklight(playerPos + geoNormal * 0.5);
 
     return lighting;
 }

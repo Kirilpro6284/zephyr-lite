@@ -28,5 +28,5 @@ void main ()
 
     vec3 integratedData = evalScattering(currPos, rayDir, sunDir) + NIGHT_BRIGHTNESS * evalScattering(currPos, rayDir, moonDir);
 
-    imageStore(imgScattering, SKY_VIEW_BOTTOM_LEFT + ivec2(gl_GlobalInvocationID.xy), vec4(integratedData, 1.0));
+    imageStore(imgScattering, SKY_VIEW_BOTTOM_LEFT + ivec2(gl_GlobalInvocationID.xy), encodeRgbe8(integratedData));
 }

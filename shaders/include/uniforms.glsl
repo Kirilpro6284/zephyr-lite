@@ -7,8 +7,8 @@
     } renderState;
 
     layout (r8ui) uniform uimage3D voxelBuffer;
-    layout (rgba16f) uniform image3D lightBuffer;
-    layout (rgba16f) uniform image2D imgScattering;
+    layout (rgba8) uniform image3D lightBuffer;
+    layout (rgba8) uniform image2D imgScattering;
 
     uniform usampler3D voxelSampler;
     uniform sampler3D lightSampler;
@@ -75,5 +75,7 @@
 
     uniform int frameCounter;
     uniform int renderStage;
+
+    uniform bool hideGUI;
 
 #endif
