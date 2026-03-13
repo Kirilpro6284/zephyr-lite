@@ -61,6 +61,7 @@
     uniform vec3 playerLookVector;
     uniform vec3 cameraVelocity;
 
+	uniform vec2 depthLinearizationConst;
     uniform vec2 internalScreenSize;
     uniform vec2 internalTexelSize;
     uniform vec2 taa_offset_prev;

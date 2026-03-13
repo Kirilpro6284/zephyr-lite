@@ -55,7 +55,7 @@ void main () {
             ivec3 voxelPos = playerToVoxelPos(playerPos + at_midBlock.xyz * rcp(64.0));
 
             if (inVoxelBounds(voxelPos)) {
-                uint voxelData = uint(mc_Entity.x) & 255u;
+                uint voxelData = (uint(mc_Entity.x) - 10000u) & 255u;
 
                 if (voxelData < 16u || voxelData > 63u) voxelData = uint(renderStage == MC_RENDER_STAGE_TERRAIN_SOLID);
 

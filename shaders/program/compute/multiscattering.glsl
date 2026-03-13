@@ -14,12 +14,14 @@
 layout (local_size_x = 8, local_size_y = 8) in;
 const ivec3 workGroups = ivec3(4, 4, 1);
 
-#define MULTIPLE_SCATTERING_SAMPLES 8
+#define MULTIPLE_SCATTERING_SAMPLES 256
 
 void main ()
 {
+    if (frameCounter > 128) return;
+
     ivec2 texel = ivec2(gl_GlobalInvocationID.xy);
-    uint state = gl_GlobalInvocationID.x + 32u * gl_GlobalInvocationID.y + 32u * 32u * (frameCounter & 31u);
+    uint state = gl_GlobalInvocationID.x + 32u * gl_GlobalInvocationID.y + 32u * 32u * (frameCounter & 127u);
 
     vec2 uv = vec2(gl_GlobalInvocationID.xy) * rcp(31.0);
 
@@ -39,5 +41,5 @@ void main ()
 
     if (any(isnan(integratedData))) integratedData = vec3(0.0);
 
-    imageStore(imgScattering, SKY_MS_BOTTOM_LEFT + texel, encodeRgbe8(mix(prevData, integratedData, rcp(min(frameCounter, 64)))));
+    imageStore(imgScattering, SKY_MS_BOTTOM_LEFT + texel, encodeRgbe8(mix(prevData, integratedData, rcp(frameCounter))));
 }

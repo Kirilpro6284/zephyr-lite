@@ -176,6 +176,8 @@
 
         vec3 result = vec3(0.0);
 
+        coord = -fract(coord);
+
         for (int i = 0; i < 8; i++) {
             ivec3 offset = ivec3(i >> 2, i >> 1, i) & ivec3(1);
 

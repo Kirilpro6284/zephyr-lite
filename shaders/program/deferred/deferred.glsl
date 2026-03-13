@@ -9,12 +9,12 @@
 #include "/include/sky/atmosphere.glsl"
 #include "/include/lighting/floodfill.glsl"
 #include "/include/lighting/lighting.glsl"
+#include "/include/surface/material.glsl"
 
 /* RENDERTARGETS: 7 */
 layout (location = 0) out vec4 color;
 
-void main ()
-{
+void main () {
     ivec2 texel = ivec2(gl_FragCoord.xy);
 
     color.a = 1.0;
@@ -28,13 +28,7 @@ void main ()
     vec3 textureNormal = octDecode(unpackExp2x16(materialData.z));
     vec4 specularData = unpackUnorm4x8(materialData.w);
 
-    uint blockId = uint(albedo.a * 255.0 + 0.5);
-
-    albedo.rgb = pow(albedo.rgb, vec3(2.2));
-
-    vec3 f0; float roughness; float emission;
-
-    applySpecularMap(specularData, albedo.rgb, f0, roughness, emission);
+    Material mat = applySpecularMap(specularData, pow(albedo.rgb, vec3(2.2)));
 
     float depth = texelFetch(colortex11, texel, 0).r;
 
@@ -47,15 +41,15 @@ void main ()
     
     float dither = getInterleavedGradientNoise(gl_FragCoord.xy);
 
-    color = encodeRgbe8(getSceneLighting(
+    color = encodeRgbe8(mat.albedo * EMISSION_BRIGHTNESS * mat.emission + getSceneLighting(
         playerPos, 
         dither, 
-        0.85, 
-        blockId == 4 ? 1.0 : 0.0,
+        mat.roughness, 
+        mat.sssAmount,
         geoNormal, 
         textureNormal, 
-        albedo.rgb, 
-        vec3(0.1), 
+        mat.albedo, 
+        mat.f0, 
         adjustLightLevels(normalData.zw)
     ));
 }

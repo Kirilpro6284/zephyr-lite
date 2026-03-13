@@ -23,7 +23,7 @@ void voxy_emitFragment (VoxyFragmentParameters parameters)
     vec3 albedo = parameters.sampledColour.rgb * parameters.tinting.rgb;
     vec3 normal = vec3(uint((parameters.face>>1)==2), uint((parameters.face>>1)==0), uint((parameters.face>>1)==1)) * (float(int(parameters.face)&1)*2-1);
 
-    float geometryId = parameters.customId;
+    float geometryId = parameters.customId - 10000u;
     vec4 specularData = vec4(0.0);
 
     colortex8Out.x = packUnorm4x8(vec4(albedo.rgb, geometryId * rcp(255.0)));

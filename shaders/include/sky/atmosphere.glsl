@@ -84,7 +84,7 @@
 
         uv = rcp(256.0) * mix(vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT + SKY_TRANSMITTANCE_RES) - 0.5, saturate(uv));
 
-        return sqr(texture(scattering, uv).rgb);
+        return textureRgbe8(scattering, uv, vec2(256.0));
     }
 
     vec3 getTransmittance (vec3 lightDir) 

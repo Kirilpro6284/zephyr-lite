@@ -38,17 +38,15 @@
         }
     #endif
 
-    float getBlockerDepth (vec3 shadowViewPos, float dither)
-    {
+    float getBlockerDepth (vec3 shadowViewPos, float dither) {
         float blockerDepth = 0.0;
 
-        mat2 factor = rotate(0.2451223 * TWO_PI);
         vec2 state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
 
         for (int i = 0; i < SHADOW_BLOCKER_SAMPLES; i++) 
         {
             float sampleDist = SHADOW_BLOCKER_RADIUS * sqrt(fract(0.4301597 * i + 0.5));
-            state *= factor;
+            state *= vogelPhase;
 
             blockerDepth += clamp(shadowProjScaleInv.z * (texture(shadowtex0, distortShadowPos(shadowProjScale.xy * (shadowViewPos.xy + sampleDist * state)) * 0.5 + 0.5).r * 2.0 - 1.0) - shadowViewPos.z, 0.0, SHADOW_MAX_BLOCKER_DEPTH);
         }
@@ -61,67 +59,61 @@
             , float blockerDepth
         #endif
     ) {
+        vec2 vogelState = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
         vec2 distortDiff = distortShadowPosDiff(shadowProjScale.xy * shadowViewPos.xy);
 
         float biasAmount = shadowDistance * rcp(min(distortDiff.x, distortDiff.y) * float(shadowMapResolution));
 
         vec3 shadowPos = shadowProjScale * (shadowViewPos + mat3(shadowModelView) * normal * (SHADOW_BIAS + biasAmount));
+        vec3 shadowDistortPos = vec3(distortShadowPos(shadowPos.xy), shadowPos.z) * 0.5 + 0.5;
+
+        #ifdef SHADOW_VPS
+            float penumbraSize = blockerDepth * SHADOW_SOFTNESS;
+            float kernelRadius = shadowProjScale.x * max(SHADOW_SMOOTHING * biasAmount, penumbraSize);
+        #else
+            float penumbraSize = 2.0 * SHADOW_SOFTNESS;
+            float kernelRadius = shadowProjScale.x * penumbraSize;
+        #endif
+
+        vec4 integratedData = vec4(0.0);
+        distortDiff *= 0.5;
+
+        vec2 sampleState = vogelState;
+
+        for (int i = 0; i < SHADOW_SAMPLES; i++) {
+            float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
+            sampleState *= vogelPhase;
+
+            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos.xy + distortDiff * sampleDist * sampleState, shadowDistortPos.z)).r;
+        }
+
+        integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), clamp(SHADOW_SMOOTHING * biasAmount / penumbraSize, 1.0, 1.0 + SHADOW_SMOOTHING)));
 
         float shadowGradient = smoothstep(-1.0, -0.99, -abs(shadowPos.x))
                              * smoothstep(-1.0, -0.99, -abs(shadowPos.y));
 
-        vec2 shadowDistortPos = distortShadowPos(shadowPos.xy);
-
-        vec3 shadowViewNormal = mat3(shadowModelView) * normal;
-
-        float penumbraSize = blockerDepth * SHADOW_SOFTNESS;
-
-        #ifdef SHADOW_VPS
-            float kernelRadius = shadowProjScale.x * max(SHADOW_SMOOTHING * biasAmount, penumbraSize);
-        #else
-            float kernelRadius = shadowProjScale.x * SHADOW_SOFTNESS * 2.0;
-        #endif
-
-        float shadowSharpening = clamp(SHADOW_SMOOTHING * biasAmount / penumbraSize, 1.0, 1.0 + SHADOW_SMOOTHING);
-
-        vec4 integratedData = vec4(0.0);
-
-        mat2 factor = rotate(0.2451223 * TWO_PI);
-        vec2 state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
-
-        for (int i = 0; i < SHADOW_SAMPLES; i++)
-        {
-            float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
-            state *= factor;
-
-            integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos + distortDiff * sampleDist * state, shadowPos.z) * 0.5 + 0.5).r;
-        }
-
-        integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), shadowSharpening));
-
         #ifdef COLORED_SHADOWS
-            state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
+            sampleState = vogelState;
             float kernelSum = 0.0;
 
-            for (int i = 0; i < SHADOW_SAMPLES; i++)
-            {
+            for (int i = 0; i < SHADOW_SAMPLES; i++) {
                 float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
-                state *= factor;
+                sampleState *= vogelPhase;
 
-                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * ((shadowDistortPos + distortDiff * sampleDist * state) * 0.5 + 0.5));
+                ivec2 sampleTexel = ivec2(float(shadowMapResolution) * (shadowDistortPos.xy + distortDiff * sampleDist * sampleState));
 
                 vec4 sampleColor = texelFetch(shadowcolor0, sampleTexel, 0);
-                float sampleDepth = step((shadowPos.z) * 0.5 + 0.5, texelFetch(shadowtex0, sampleTexel, 0).x);
+                float visibility = step(shadowPos.z * 0.5 + 0.5, texelFetch(shadowtex0, sampleTexel, 0).x);
 
-                if (sampleColor.a > 0.99 && sampleDepth == 0.0) continue;
+                if (sampleColor.a > 0.99 && visibility == 0.0) continue;
                 
-                integratedData.rgb += mix(sampleColor.rgb * (1.0 - sampleColor.a), vec3(1.0), sampleDepth);
-                kernelSum += 1.0;
+                integratedData.rgb += mix(sampleColor.rgb * (1.0 - sampleColor.a), vec3(1.0), visibility);
+                kernelSum++;
             }
 
-            return shadowGradient * (kernelSum < 0.5 ? integratedData.www : (rcp(kernelSum) * integratedData.rgb * integratedData.w)) + (1.0 - shadowGradient);
+            return shadowGradient * (kernelSum < 0.5 ? vec3(integratedData.w) : (rcp(kernelSum) * integratedData.rgb * integratedData.w)) + (1.0 - shadowGradient);
         #else
-            return shadowGradient * integratedData.www + (1.0 - shadowGradient);
+            return shadowGradient * vec3(integratedData.w) + (1.0 - shadowGradient);
         #endif
     }
 

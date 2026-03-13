@@ -4,12 +4,12 @@
 vec3 getSubsurfaceScattering (vec3 albedo, float sssAmount, float mu, float sssDepth) {
     if (sssAmount < 0.001) return vec3(0.0);
 
-    vec3 coeff = -SSS_ABSORPTION * exp(-0.75 * normalize(albedo)) / sssAmount;
+    vec3 coeff = -SSS_ABSORPTION * exp(-2.0 * albedo) / sssAmount;
 
-    vec3 s1 = 0.5 * vec3(0.94, 1.0, 0.76) * (luminance(albedo) + 0.02) * exp(3.0 * coeff * sssDepth + 3.0) * schlickPhase(mu, 0.5);
-    vec3 s2 = 8.0 * albedo * albedo * exp(0.5 * coeff * sssDepth + SSS_PHASE * mu);
+    vec3 s1 = 3.5 * exp(3.0 * coeff * sssDepth) * schlickPhase(mu, 0.5);
+    vec3 s2 = 4.0 * sqrt(albedo) * inversesqrt(dot(vec3(0.333), albedo)) * exp(0.5 * coeff * sssDepth) * mix(schlickPhase(mu, 0.3), schlickPhase(-mu, 0.1), 0.3);
 
-    return getTransmittance(shadowDir) * SSS_INTENSITY * sssAmount * (s1 + s2);
+    return getTransmittance(shadowDir) * SSS_INTENSITY * TWO_PI * albedo * sssAmount * (s1 + s2);
 }
 
 vec2 adjustLightLevels (vec2 lightLevels) {
@@ -31,6 +31,7 @@ vec3 getSceneLighting (
     vec2 lightLevels
 ) {
     vec3 shadowViewPos = (shadowModelView * vec4(playerPos, 1.0)).xyz;
+    vec3 viewDir = normalize(playerPos - gbufferModelViewInverse[2].xyz);
 
     #ifdef SHADOW_VPS
         float blockerDepth = getBlockerDepth(shadowViewPos, dither);
@@ -40,14 +41,14 @@ vec3 getSceneLighting (
 
     float shadowLightBrightness = sunDir.y < 0.0 ? NIGHT_BRIGHTNESS : 1.0;
 
-    lighting += exp(-sssAmount) * shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -normalize(playerPos), roughness, textureNormal, albedo.rgb, f0) * getShadow(shadowViewPos, geoNormal, dither
+    lighting += shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -viewDir, roughness, textureNormal, albedo.rgb, f0) * getShadow(shadowViewPos, geoNormal, dither
         #ifdef SHADOW_VPS
             , blockerDepth
         #endif
     );
 
     lighting += lightLevels.y * albedo.rgb * getAtmosphereScattering(vec3(0.0, 1.0, 0.0));
-    lighting += shadowLightBrightness * getSubsurfaceScattering(albedo.rgb, sssAmount, dot(normalize(playerPos), shadowDir), blockerDepth);
+    lighting += shadowLightBrightness * getSubsurfaceScattering(albedo.rgb, sssAmount, dot(viewDir, shadowDir), blockerDepth);
     lighting += albedo.rgb * getBlocklight(playerPos + geoNormal * 0.5);
 
     return lighting;

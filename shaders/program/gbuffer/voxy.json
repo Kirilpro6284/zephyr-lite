@@ -6,7 +6,8 @@
     ",
   "version": 1,
   "uniforms": [
-    "taa_offset"
+    "taa_offset",
+    "depthLinearizationConst"
   ],
   "taaOffset": "{return taa_offset;}",
   "useViewportDims": true,
