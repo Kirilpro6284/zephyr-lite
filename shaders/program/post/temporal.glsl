@@ -26,14 +26,14 @@ void main ()
     color = vec4(currData, 1.0);
 
     vec2 uv = texelSize * gl_FragCoord.xy;
-    float depth = texelFetch(depthtex1, srcTexel, 0).r;
+    float depth = texelFetch(lodDepthTex1, srcTexel, 0).r;
 
     vec3 playerPos = screenToPlayerPos(uv, depth).xyz;
 
-    vec4 prevPos = gbufferPreviousProjection * gbufferPreviousModelView * vec4(playerPos.xyz + float(depth < 1.0) * step(0.05, dot(playerPos.xyz, playerPos.xyz)) * cameraVelocity, 1.0);
+    vec4 prevPos = lodProjMatPrev0 * gbufferPreviousModelView * vec4(playerPos.xyz + step(0.05, dot(playerPos.xyz, playerPos.xyz)) * cameraVelocity, 1.0);
 
-    vec3 prevUv = prevPos.xyz / prevPos.w;
-    prevUv = vec3(prevUv.xy + taa_offset, prevUv.z) * 0.5 + 0.5;
+    vec2 prevUv = prevPos.xy / prevPos.w;
+    prevUv = (prevUv + taa_offset) * 0.5 + 0.5;
 
     #if TEMPORAL_UPSAMPLING < 100
         bool isUnderSample = dstTexel != texel;
@@ -41,9 +41,9 @@ void main ()
         bool isUnderSample = false;
     #endif
 
-    if (floor(prevUv.xy) == vec2(0.0) && prevPos.w > 0.0)
+    if (floor(prevUv) == vec2(0.0) && prevPos.w > 0.0)
     {
-        vec4 prevData = texCatmullRom(colortex6, prevUv.xy, screenSize);
+        vec4 prevData = texCatmullRom(colortex6, prevUv, screenSize);
 
         if (!any(isnan(prevData)))
         {   

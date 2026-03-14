@@ -1,6 +1,9 @@
 #if !defined INCLUDE_LIGHTING
 #define INCLUDE_LIGHTING
 
+#include "/include/utility/spaceConversion.glsl"
+#include "/include/utility/raymarching.glsl"
+
 vec3 getSubsurfaceScattering (vec3 albedo, float sssAmount, float mu, float sssDepth) {
     if (sssAmount < 0.001) return vec3(0.0);
 
@@ -12,6 +15,16 @@ vec3 getSubsurfaceScattering (vec3 albedo, float sssAmount, float mu, float sssD
     return getTransmittance(shadowDir) * SSS_INTENSITY * TWO_PI * albedo * sssAmount * (s1 + s2);
 }
 
+vec3 getScreenSpaceReflections (vec3 screenPos, vec3 playerPos, vec3 reflectedDir, float dither, float skylight) {
+    vec3 rayEnd = playerToScreenPos(playerPos + near * reflectedDir);
+    vec3 rayDir = clipAABB(screenPos, rayEnd - screenPos, vec3(0.0, 0.0, -2.0), vec3(1.0, 1.0, 0.0));
+
+    bool hit = traceScreenSpaceRay(screenPos, rayDir, max(0.1, dither));
+
+    if (!hit) return smoothstep(0.8, 1.0, skylight) * getAtmosphereScattering(reflectedDir);
+    else return textureRgbe8(colortex7, screenPos.xy, internalScreenSize);
+}
+
 vec2 adjustLightLevels (vec2 lightLevels) {
     lightLevels.y = 2.0 * lightLevels.y - lightLevels.y * lightLevels.y;
     lightLevels.y = pow(lightLevels.y, 8.0);
@@ -21,6 +34,7 @@ vec2 adjustLightLevels (vec2 lightLevels) {
 
 vec3 getSceneLighting (
     vec3 playerPos,
+    vec3 viewDir,
     float dither,
     float roughness, 
     float sssAmount,
@@ -31,7 +45,6 @@ vec3 getSceneLighting (
     vec2 lightLevels
 ) {
     vec3 shadowViewPos = (shadowModelView * vec4(playerPos, 1.0)).xyz;
-    vec3 viewDir = normalize(playerPos - gbufferModelViewInverse[2].xyz);
 
     #ifdef SHADOW_VPS
         float blockerDepth = getBlockerDepth(shadowViewPos, dither);

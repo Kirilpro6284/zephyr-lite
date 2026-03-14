@@ -7,12 +7,16 @@
   "version": 1,
   "uniforms": [
     "taa_offset",
-    "depthLinearizationConst"
+    "lodProjMat_2",
+    "lodProjMat_3",
+    "lodProjMatInv_2",
+    "lodProjMatInv_3",
+    "vxProjInv"
   ],
   "taaOffset": "{return taa_offset;}",
   "useViewportDims": true,
   "excludeLodsFromVanillaDepth": true,
   "renderScale": [TAAU_RENDER_SCALE, TAAU_RENDER_SCALE],
-  "opaqueDrawBuffers": [8, 9],
+  "opaqueDrawBuffers": [8, 9, 11],
   "translucentDrawBuffers": [1]
 }

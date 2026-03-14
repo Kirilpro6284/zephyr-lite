@@ -10,7 +10,7 @@ struct Material {
 };
 
 vec4 getHardcodedSpecular (vec3 albedo, uint blockId) {
-    vec4 specularData = vec4(0.1, 0.1, 0.0, 0.0);
+    vec4 specularData = vec4(0.1, 0.05, 0.0, 0.0);
 
     if (blockId < 32) {
         if (blockId < 8) {

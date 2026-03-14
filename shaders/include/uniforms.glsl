@@ -42,6 +42,42 @@
 
     uniform sampler2D depthtex1;
 
+    uniform vec4 lodProjMat_0;
+    uniform vec4 lodProjMat_1;
+    uniform vec4 lodProjMat_2;
+    uniform vec4 lodProjMat_3;
+
+    uniform vec4 lodProjMatPrev_0;
+    uniform vec4 lodProjMatPrev_1;
+    uniform vec4 lodProjMatPrev_2;
+    uniform vec4 lodProjMatPrev_3;
+
+    uniform vec4 lodProjMatInv_0;
+    uniform vec4 lodProjMatInv_1;
+    uniform vec4 lodProjMatInv_2;
+    uniform vec4 lodProjMatInv_3;
+
+    #define lodProjMat0 mat4( \
+        lodProjMat_0, \
+        lodProjMat_1, \
+        lodProjMat_2, \
+        lodProjMat_3 \
+    )
+
+    #define lodProjMatPrev0 mat4( \
+        lodProjMatPrev_0, \
+        lodProjMatPrev_1, \
+        lodProjMatPrev_2, \
+        lodProjMatPrev_3 \
+    )
+
+    #define lodProjMatInv0 mat4( \
+        lodProjMatInv_0, \
+        lodProjMatInv_1, \
+        lodProjMatInv_2, \
+        lodProjMatInv_3 \
+    )
+
     uniform mat4 gbufferPreviousProjection;
     uniform mat4 gbufferProjectionInverse;
     uniform mat4 gbufferPreviousModelView;
@@ -52,6 +88,7 @@
     uniform mat4 shadowModelView;
     
     uniform mat4 vxViewProjInv;
+    uniform mat4 vxProjInv;
 
     uniform vec3 shadowDir;
     uniform vec3 moonDir;
@@ -61,7 +98,6 @@
     uniform vec3 playerLookVector;
     uniform vec3 cameraVelocity;
 
-	uniform vec2 depthLinearizationConst;
     uniform vec2 internalScreenSize;
     uniform vec2 internalTexelSize;
     uniform vec2 taa_offset_prev;
@@ -70,13 +106,20 @@
     uniform vec2 texelSize; 
 
     uniform float eyeAltitude;
+    uniform float near;
 
     uniform ivec3 previousCameraPositionInt;
     uniform ivec3 cameraPositionInt;
+
+    #ifdef VOXY
+        uniform int vxRenderDistance;
+    #endif
 
     uniform int frameCounter;
     uniform int renderStage;
 
     uniform bool hideGUI;
+
+    #define lodDepthTex1 colortex11
 
 #endif

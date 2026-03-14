@@ -58,7 +58,14 @@ mat2 rotate (float theta) {
 }
 
 float linearizeDepth (float depth) {
-    return rcp(depthLinearizationConst.x * depth + depthLinearizationConst.y);
+    return (lodProjMatInv_3.z) / (lodProjMatInv_2.w * depth + lodProjMatInv_3.w);
+}
+
+vec3 clipAABB (vec3 origin, vec3 dir, vec3 boxMin, vec3 boxMax) 
+{
+    vec3 t2 = max((boxMin - origin) / dir, (boxMax - origin) / dir);
+
+    return dir * min(min(t2.x, t2.y), t2.z);
 }
 
 float sqr (float x) {

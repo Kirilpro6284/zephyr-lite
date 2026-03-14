@@ -79,7 +79,7 @@
 			text.textPos     = textPos;
 			text.charPos     = ivec2(0);
 			text.base        = 10;
-			text.fpPrecision = 3;
+			text.fpPrecision = 8;
 		}
 
 		// Applies the rendered text to the fragment

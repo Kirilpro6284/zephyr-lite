@@ -10,15 +10,18 @@ uniform float alphaTestRef = 0.1;
 
 flat in uint geometryId;
 
+noperspective in float reversedDepth;
+
 in vec2 texcoord;
 in vec2 lightLevels;
 in vec3 vertexColor;
 in vec3 vertexNormal;
 in vec4 vertexTangent;
 
-/* RENDERTARGETS: 8,9 */
+/* RENDERTARGETS: 8,9,11 */
 layout (location = 0) out uvec4 colortex8Out;
 layout (location = 1) out uvec4 colortex9Out;
+layout (location = 2) out vec4 colortex11Out;
 
 void main ()
 {
@@ -38,6 +41,8 @@ void main ()
     colortex9Out.x = packExp2x16(octEncode(tbnMatrix * textureNormal));
     colortex9Out.y = packUnorm4x8(specularData);
 
+    colortex11Out = vec4(reversedDepth, 0.0, 0.0, 1.0);
+
     if (albedo.a < alphaTestRef) discard;
 }
 
@@ -50,6 +55,8 @@ attribute vec2 mc_Entity;
 
 flat out uint geometryId;
 
+noperspective out float reversedDepth;
+
 out vec2 texcoord;
 out vec2 lightLevels;
 out vec3 vertexColor;
@@ -58,7 +65,9 @@ out vec4 vertexTangent;
 
 void main ()
 {
-    gl_Position = ftransform();
+    vec3 viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
+
+    gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
     gl_Position.xy += gl_Position.w * taa_offset;
     gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, TAAU_RENDER_SCALE);
@@ -69,6 +78,7 @@ void main ()
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
     vertexTangent = vec4(mat3(gbufferModelViewInverse) * mat3(gl_ModelViewMatrix) * at_tangent.xyz, at_tangent.w);
 
+    reversedDepth = (lodProjMat_2.z * viewPos.z + lodProjMat_3.z) / (lodProjMat_2.w * viewPos.z);
     geometryId = uint(mc_Entity.x) - 10000u;
 }
 

@@ -1,7 +1,7 @@
 #ifndef INCLUDE_BRDF
     #define INCLUDE_BRDF
 
-    vec3 schlickFresnel (vec3 F0, float theta)
+    vec3 getSchlickFresnel (vec3 F0, float theta)
     {  
         return F0 + (1.0 - F0) * pow(1.0 - theta, 5.0);
     }
@@ -36,7 +36,7 @@
         float VdotH = clamp(dot(w1, H), 0.001, 1.0);
 
         // Fresnel
-        vec3 fresnelReflectance = schlickFresnel(reflectance, VdotH); //Schlick's Approximation
+        vec3 fresnelReflectance = getSchlickFresnel(reflectance, VdotH);
 
         // phong diffuse
         vec3 diffuse = NdotL * albedo;

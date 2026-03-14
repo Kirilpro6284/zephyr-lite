@@ -4,9 +4,6 @@
 #include "/include/main.glsl"
 #include "/include/post/tonemapping.glsl"
 #include "/include/utility/packing.glsl"
-
-//#define ENABLE_TEXT_RENDERING
-
 #include "/include/text/text.glsl"
 
 layout (location = 0) out vec4 color;
@@ -35,8 +32,22 @@ void main ()
         text.fgCol = vec4(vec3(1.0), 1.0);
         text.bgCol = vec4(vec3(0.0), 0.0);
         
-        printVec3(decodeRgbe8(rcp(255.0) * floor(0.5 + 255.0 * encodeRgbe8(vec3(3.0, 0.5, 0.1)))));
+        printVec4(lodProjMat_0);
+        printLine();
+        printVec4(lodProjMat_1);
+        printLine();
+        printVec4(lodProjMat_2);
+        printLine();
+        printVec4(lodProjMat_3);
+        printLine(); printLine();
+
+        printLine(); printLine();
+
+        float depth = -8000.0;
         
+        printInt(vxRenderDistance); printLine();
+        printFloat((lodProjMat_2.z * depth + lodProjMat_3.z) / (lodProjMat_2.w * depth));
+    
         endText(color.rgb);
     #endif
 }

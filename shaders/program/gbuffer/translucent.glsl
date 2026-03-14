@@ -8,10 +8,13 @@
 #include "/include/lighting/floodfill.glsl"
 #include "/include/lighting/lighting.glsl"
 #include "/include/utility/spaceConversion.glsl"
+#include "/include/utility/raymarching.glsl"
 
 uniform float alphaTestRef = 0.1;
 
 #ifdef fsh
+
+noperspective in float reversedDepth;
 
 in vec2 texcoord;
 in vec2 lightLevels;
@@ -19,28 +22,37 @@ in vec3 vertexNormal;
 in vec3 vertexColor;
 
 /* RENDERTARGETS: 1 */
-layout (location = 0) out vec4 colortex1Out;
+layout (location = 0) out vec4 fragColor;
 
 void main ()
 {
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
-    
-    vec3 playerPos = screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, gl_FragCoord.z).xyz;
 
     albedo.rgb = pow(albedo.rgb, vec3(2.2));
 
-    colortex1Out.rgb = getSceneLighting(
+    vec3 screenPos = vec3(internalTexelSize * gl_FragCoord.xy, reversedDepth);
+
+    vec3 playerPos = screenToPlayerPos(screenPos.xy, screenPos.z).xyz;
+    vec3 viewDir = normalize(playerPos - gbufferModelViewInverse[3].xyz);
+
+    vec3 reflectedDir = reflect(viewDir, vertexNormal);
+
+    fragColor.rgb = getSceneLighting(
         playerPos, 
+        viewDir,
         getBlueNoise(gl_FragCoord.xy).r, 
         0.2,
         0.5,
         vertexNormal,
         vertexNormal,
         albedo.rgb,
-        vec3(1.0),
+        vec3(0.4),
         lightLevels
     );
-    colortex1Out.a = albedo.a;
+
+    fragColor.rgb = mix(fragColor.rgb, getScreenSpaceReflections(screenPos, playerPos, reflectedDir, getInterleavedGradientNoise(gl_FragCoord.xy), lightLevels.y), getSchlickFresnel(vec3(0.4), dot(reflectedDir, vertexNormal)));
+
+    fragColor.a = albedo.a;
 
     if (albedo.a < alphaTestRef) discard;
 }
@@ -49,6 +61,8 @@ void main ()
 
 #ifdef vsh
 
+noperspective out float reversedDepth;
+
 out vec2 texcoord;
 out vec2 lightLevels;
 out vec3 vertexNormal;
@@ -56,7 +70,9 @@ out vec3 vertexColor;
 
 void main ()
 {
-    gl_Position = ftransform();
+    vec3 viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
+
+    gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
     gl_Position.xy += gl_Position.w * taa_offset;
     gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, TAAU_RENDER_SCALE);
@@ -65,6 +81,8 @@ void main ()
     lightLevels = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
     vertexColor = gl_Color.rgb;
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
+    
+    reversedDepth = (lodProjMat_2.z * viewPos.z + lodProjMat_3.z) / (lodProjMat_2.w * viewPos.z);
 }
 
 #endif

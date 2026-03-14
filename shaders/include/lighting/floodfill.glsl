@@ -40,16 +40,16 @@
         vec3(0.8, 0.7, 0.68), // End rod
         vec3(0.7, 0.2, 0.9) * 0.02, // Crying obsidian
         vec3(0.9, 0.3, 0.1) * 0.03, // Magma block
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0),
+        vec3(0.9, 0.3, 0.1), // Copper bulb
+        vec3(0.9, 0.3, 0.1) * 0.5, // Exposed copper bulb
+        vec3(0.9, 0.3, 0.1) * 0.25, // Weathered copper bulb
+        vec3(0.9, 0.3, 0.1) * 0.125, // Oxidized copper bulb
+        vec3(0.5, 0.7, 1.0) * 0.02, // Glow lichen
+        vec3(0.8, 0.35, 1.0) * 0.5, // Amethyst cluster
+        vec3(0.8, 0.35, 1.0) * 0.25, // Large amethyst bud
+        vec3(0.8, 0.35, 1.0) * 0.125, // Medium amethyst bud
+        vec3(0.8, 0.35, 1.0) * 0.0625, // Small amethyst bud
+        vec3(0.0), 
         vec3(0.0),
         vec3(0.0),
         vec3(0.0),
