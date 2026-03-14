@@ -7,6 +7,7 @@
   "version": 1,
   "uniforms": [
     "taa_offset",
+    "internalScreenSize",
     "lodProjMat_2",
     "lodProjMat_3",
     "lodProjMatInv_2",

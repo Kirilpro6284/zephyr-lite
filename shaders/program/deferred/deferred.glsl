@@ -35,7 +35,7 @@ void main () {
     vec3 playerPos = screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, depth).xyz;
 
     if (depth == 0.0) {
-        color = encodeRgbe8(getAtmosphereScattering(normalize(playerPos)));
+        color = encodeRgbe8(pow(decodeRgbe8(texelFetch(colortex10, texel, 0)), vec3(2.2)) + getAtmosphereScattering(normalize(playerPos)));
         return;
     }
     

@@ -2,6 +2,7 @@
 #include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
+#include "/include/post/bloom.glsl"
 
 /*
     const bool colortex6MipmapEnabled = true;
@@ -23,8 +24,11 @@ vec3 getPurkinjeShift (vec3 color)
 void main ()
 {
     ivec2 texel = ivec2(gl_FragCoord.xy);
+    vec2 uv = texelSize * gl_FragCoord.xy;
 
     vec3 currData = decodeRgbe8(texelFetch(colortex10, texel, 0));
+
+    currData += getBloom(uv);
 
     if (texel == ivec2(0)) renderState.averageLuminance = mix(renderState.averageLuminance, clamp(luminance(textureLod(colortex6, vec2(0.5), 16.0).rgb), 0.002, 0.02), 0.02);
 

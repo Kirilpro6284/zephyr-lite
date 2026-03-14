@@ -21,6 +21,12 @@ layout (location = 2) out vec4 colortex11Out;
 
 void voxy_emitFragment (VoxyFragmentParameters parameters)
 {
+    #if TEMPORAL_UPSAMPLING < 100
+        if (any(greaterThan(gl_FragCoord.xy + 0.5, internalScreenSize))) {
+            return;
+        }
+    #endif
+
     vec3 albedo = parameters.sampledColour.rgb * parameters.tinting.rgb;
     vec3 normal = vec3(uint((parameters.face>>1)==2), uint((parameters.face>>1)==0), uint((parameters.face>>1)==1)) * (float(int(parameters.face)&1)*2-1);
 

@@ -25,6 +25,12 @@ layout (location = 2) out vec4 colortex11Out;
 
 void main ()
 {
+    #if TEMPORAL_UPSAMPLING < 100
+        if (any(greaterThan(gl_FragCoord.xy + 0.5, internalScreenSize))) {
+            return;
+        }
+    #endif
+
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
     vec4 specularData = getHardcodedSpecular(albedo.rgb, geometryId);
 
@@ -37,7 +43,7 @@ void main ()
     textureNormal.z = sqrt(max(0.0, 1.0 - dot(textureNormal.xy, textureNormal.xy)));
 
     colortex8Out.x = packUnorm4x8(vec4(albedo.rgb, 0.0)) | ((geometryId & 255u) << 24u);
-    colortex8Out.y = packExp4x8(vec4(octEncode(vertexNormal), lightLevels));
+    colortex8Out.y = packExp4x8(vec4(octEncode(vertexNormal), lightLevels + rcp(254.0) * getInterleavedGradientNoise(gl_FragCoord.xy)));
     colortex9Out.x = packExp2x16(octEncode(tbnMatrix * textureNormal));
     colortex9Out.y = packUnorm4x8(specularData);
 

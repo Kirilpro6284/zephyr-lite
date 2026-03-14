@@ -39,7 +39,7 @@
     #define SSS_INTENSITY 0.5  // [1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0 19.0 20.0 21.0 22.0 23.0 24.0 25.0 27.0 28.0 29.0 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0 40.0]
     #define SSS_ABSORPTION 15.0 // [1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0 9.5 10.0 10.5 11.0 11.5 12.0 12.5 13.0 13.5 14.0 14.5 15.0 15.5 16.0]
 
-    #define TONEMAP_OPERATOR 5 // [0 1 2 3 4 5]
+    #define tonemap tonyMcMapface // [agx lottes neutral acesFilmic reinhard2 exponential tonemap_none tonyMcMapface]
 
     #define TAA
     #define TEMPORAL_UPSAMPLING 100 // [25 33 50 66 75 83 100]

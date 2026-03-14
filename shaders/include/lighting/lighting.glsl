@@ -17,9 +17,9 @@ vec3 getSubsurfaceScattering (vec3 albedo, float sssAmount, float mu, float sssD
 
 vec3 getScreenSpaceReflections (vec3 screenPos, vec3 playerPos, vec3 reflectedDir, float dither, float skylight) {
     vec3 rayEnd = playerToScreenPos(playerPos + near * reflectedDir);
-    vec3 rayDir = clipAABB(screenPos, rayEnd - screenPos, vec3(0.0, 0.0, -2.0), vec3(1.0, 1.0, 0.0));
+    vec3 rayDir = clipAABB(screenPos, rayEnd - screenPos, vec3(0.0, 0.0, -2.0), vec3(1.0, 1.0, 0.25));
 
-    bool hit = traceScreenSpaceRay(screenPos, rayDir, max(0.1, dither));
+    bool hit = traceScreenSpaceRay(screenPos, rayDir, max(0.01, dither));
 
     if (!hit) return smoothstep(0.8, 1.0, skylight) * getAtmosphereScattering(reflectedDir);
     else return textureRgbe8(colortex7, screenPos.xy, internalScreenSize);
@@ -52,7 +52,7 @@ vec3 getSceneLighting (
 
     vec3 lighting = vec3(0.0);
 
-    float shadowLightBrightness = sunDir.y < 0.0 ? NIGHT_BRIGHTNESS : 1.0;
+    float shadowLightBrightness = (sunDir.y < 0.0 ? NIGHT_BRIGHTNESS : 1.0);
 
     lighting += shadowLightBrightness * getTransmittance(shadowDir) * evalCookBRDF(shadowDir, -viewDir, roughness, textureNormal, albedo.rgb, f0) * getShadow(shadowViewPos, geoNormal, dither
         #ifdef SHADOW_VPS

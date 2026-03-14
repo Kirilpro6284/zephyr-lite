@@ -34,7 +34,7 @@ void main ()
     vec3 integratedData = vec3(0.0);
 
     for (int i = 0; i < MULTIPLE_SCATTERING_SAMPLES; i++) {
-        integratedData += evalScattering(rayPos, randomDir(state), lightDir);
+        integratedData += evalAtmosphereScattering(rayPos, randomDir(state), lightDir);
     }
     
     integratedData *= 4.0 * PI * rcp(MULTIPLE_SCATTERING_SAMPLES);

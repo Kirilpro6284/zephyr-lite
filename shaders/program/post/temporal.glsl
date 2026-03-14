@@ -28,6 +28,10 @@ void main ()
     vec2 uv = texelSize * gl_FragCoord.xy;
     float depth = texelFetch(lodDepthTex1, srcTexel, 0).r;
 
+    for (int i = 0; i < 4; i++) {
+        depth = min(depth, texelFetch(lodDepthTex1, srcTexel + ivec2(i >> 1, i & 1) * 2 - 1, 0).r);
+    }
+
     vec3 playerPos = screenToPlayerPos(uv, depth).xyz;
 
     vec4 prevPos = lodProjMatPrev0 * gbufferPreviousModelView * vec4(playerPos.xyz + step(0.05, dot(playerPos.xyz, playerPos.xyz)) * cameraVelocity, 1.0);
@@ -63,7 +67,7 @@ void main ()
 
             float alpha = rcp(prevData.w);
 
-            history.rgb = mix(prevData.rgb, currData.rgb, isUnderSample && prevData.w > 1.0 ? 0.0005 : alpha);
+            history.rgb = exp(mix(log(prevData.rgb + 1e-3), log(currData.rgb + 1e-3), isUnderSample && prevData.w > 1.0 ? 0.0005 : alpha)) - 1e-3;
             history.w = prevData.w + (isUnderSample ? 0.0005 : 1.0);
         } else history = vec4(currData.rgb, TAA_TEMPORAL_W_CLAMP);
     } else history = vec4(currData.rgb, 1.0);

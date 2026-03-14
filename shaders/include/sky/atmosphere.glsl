@@ -8,7 +8,7 @@
     #define SKY_RAYLEIGH_B 1.25
 
     #define SKY_MIE 4.0
-    #define SKY_OZONE 0.75
+    #define SKY_OZONE 0.4
 
     #define USE_KLEIN_NISHINA_PHASE
 
@@ -52,9 +52,7 @@
 
         if (dstFar < 0.0) return vec2(INFINITY);
 
-        dstNear = max0(dstNear);
-
-        return vec2(dstNear, dstFar - dstNear);
+        return vec2(max0(dstNear), dstFar);
     }
 
     vec3 getDensityAtHeight (float height) 
@@ -134,7 +132,7 @@
         return e / (TWO_PI * (e * (1.0 - cosTheta) + 1.0) * log(e * 2.0 + 1.0));
     }
 
-    vec3 evalScattering (vec3 rayOrigin, vec3 rayDir, vec3 lightDir)
+    vec3 evalAtmosphereScattering (vec3 rayOrigin, vec3 rayDir, vec3 lightDir)
     {
         float mu = dot(rayDir, lightDir);
         

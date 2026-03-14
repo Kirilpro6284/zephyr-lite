@@ -9,10 +9,9 @@ bool traceScreenSpaceRay (inout vec3 rayPos, in vec3 rayDir, float dither) {
 
     for (int i = 0; i < SSR_PRIMARY_STEP_COUNT; i++, rayPos += rayDir) 
     {
-        float sampleDepth = texture(lodDepthTex1, rayPos.xy).r;
+        float sampleDepth = texture(lodDepthTex1, rayPos.xy * TAAU_RENDER_SCALE).r;
 
         if (sampleDepth < rayPos.z && abs(rayPos.z - sampleDepth) < max(abs(rayDir.z) * 2.0, abs(rayPos.z) * 0.15)) {
-            rayPos -= rayDir;
             hit = true;
             break;
         }
@@ -20,19 +19,20 @@ bool traceScreenSpaceRay (inout vec3 rayPos, in vec3 rayDir, float dither) {
 
     if (!hit) return false;
 
-    rayDir *= rcp(SSR_REFINEMENT_STEP_COUNT - 1);
-    rayPos += rayDir * dither;
-
-    for (int i = 0; i < SSR_REFINEMENT_STEP_COUNT; i++, rayPos += rayDir) 
+    for (int i = 0; i < SSR_REFINEMENT_STEP_COUNT; i++) 
     {
-        float sampleDepth = texture(lodDepthTex1, rayPos.xy).r;
+        rayDir *= 0.5;
+
+        float sampleDepth = texture(lodDepthTex1, rayPos.xy * TAAU_RENDER_SCALE).r;
 
         if (sampleDepth < rayPos.z) {
-            return true;
+            rayPos -= rayDir;
+        } else {
+            rayPos += rayDir;
         }
     }
 
-    return false;
+    return true;
 }
 
 #endif // INCLUDE_UTILITY_RAYMARCHING

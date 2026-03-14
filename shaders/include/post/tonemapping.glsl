@@ -159,6 +159,16 @@
         return mix(color, vec3(newPeak), g);
     }
 
+    // ACES Filmic Tonemap Function
+    vec3 acesFilmic (vec3 color) {
+        float a = 2.51;
+        float b = 0.03;
+        float c = 2.43;
+        float d = 0.59;
+        float e = 0.14;
+        return (color * (a * color + b)) / (color * (c * color + d) + e);
+    }
+
     vec3 reinhard2(vec3 x) {
         const float L_white = 4.0;
 
@@ -167,6 +177,10 @@
 
     vec3 exponential (vec3 color, float exposure) {
         return 1.0 - exp(-exposure * color);
+    }
+
+    vec3 tonemap_none (vec3 color) {
+        return color;
     }
 
     // This is done this way because for some reason hardware interpolation causes color banding
@@ -186,19 +200,5 @@
 
         return result;
     }
-
-    #if TONEMAP_OPERATOR == 0
-        #define tonemap(color, exposure) pow(agx(color * exposure), vec3(1.0 / 2.2))
-    #elif TONEMAP_OPERATOR == 1
-        #define tonemap(color, exposure) pow(lottes(color * exposure), vec3(1.0 / 2.2))
-    #elif TONEMAP_OPERATOR == 2
-        #define tonemap(color, exposure) pow(neutral(color * exposure), vec3(1.0 / 2.2))
-    #elif TONEMAP_OPERATOR == 3
-        #define tonemap(color, exposure) pow(reinhard2(color * exposure), vec3(1.0 / 2.2))
-    #elif TONEMAP_OPERATOR == 4
-        #define tonemap(color, exposure) pow(exponential(color, exposure), vec3(1.0 / 2.2))
-    #elif TONEMAP_OPERATOR == 5
-        #define tonemap(color, exposure) pow(tonyMcMapface(color * exposure), vec3(1.0 / 2.2))
-    #endif
 
 #endif

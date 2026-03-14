@@ -26,6 +26,12 @@ layout (location = 0) out vec4 fragColor;
 
 void main ()
 {
+    #if TEMPORAL_UPSAMPLING < 100
+        if (any(greaterThan(gl_FragCoord.xy + 0.5, internalScreenSize))) {
+            return;
+        }
+    #endif
+
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
 
     albedo.rgb = pow(albedo.rgb, vec3(2.2));

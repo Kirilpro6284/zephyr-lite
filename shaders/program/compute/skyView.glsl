@@ -26,7 +26,7 @@ void main ()
     
     vec3 currPos = vec3(0.0, planetRadius + eyeAltitude + ALTITUDE_BIAS, 0.0);
 
-    vec3 integratedData = evalScattering(currPos, rayDir, sunDir) + NIGHT_BRIGHTNESS * evalScattering(currPos, rayDir, moonDir);
+    vec3 integratedData = evalAtmosphereScattering(currPos, rayDir, sunDir) + NIGHT_BRIGHTNESS * evalAtmosphereScattering(currPos, rayDir, moonDir);
 
     imageStore(imgScattering, SKY_VIEW_BOTTOM_LEFT + ivec2(gl_GlobalInvocationID.xy), encodeRgbe8(integratedData));
 }

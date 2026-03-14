@@ -36,6 +36,7 @@
     uniform sampler2D colortex10;
     uniform sampler2D colortex7;
     uniform sampler2D colortex6;
+    uniform sampler2D colortex5;
     uniform sampler2D colortex1;
 
     uniform sampler2D vxDepthTexOpaque;

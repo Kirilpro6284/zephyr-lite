@@ -39,7 +39,7 @@ void main () {
     vec3 viewDir = normalize(playerPos - gbufferModelViewInverse[3].xyz);
 
     if (depth == 0.0) {
-        color = encodeRgbe8(getAtmosphereScattering(normalize(playerPos)));
+        color = encodeRgbe8(currData);
         return;
     }
     
