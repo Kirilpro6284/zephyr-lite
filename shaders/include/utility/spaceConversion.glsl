@@ -1,18 +1,29 @@
 #ifndef INCLUDE_SPACE_CONVERSION
     #define INCLUDE_SPACE_CONVERSION
 
-    vec4 projectAndDivide (mat4 matrix, vec3 position) 
+    vec3 projectAndDivide (mat4 matrix, vec3 position) 
     {
         vec4 homogeneousPos = matrix * vec4(position, 1.0);
-        return vec4(homogeneousPos.xyz / homogeneousPos.w, homogeneousPos.w);
+        return homogeneousPos.xyz / homogeneousPos.w;
     }
 
-    vec4 screenToPlayerPos (vec2 uv, float depth)
-    {   
+    vec3 screenToViewPos (vec2 uv, float depth) {
         vec3 ndc = vec3(uv * 2.0 - 1.0, depth);
-        vec4 homogeneousPos = gbufferModelViewInverse * lodProjMatInv0 * vec4(ndc.xy - taa_offset, ndc.z, 1.0);
+        
+        return projectAndDivide(lodProjMatInv0, vec3(ndc.xy - taa_offset, ndc.z));
+    }
 
-        return vec4(homogeneousPos.xyz / homogeneousPos.w, homogeneousPos.w);
+    vec3 viewToPlayerPos (vec3 viewPos) {
+        return mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
+    }
+
+    vec3 playerToViewPos (vec3 playerPos) {
+        return mat3(gbufferModelView) * playerPos + gbufferModelView[3].xyz;
+    }
+
+    vec3 screenToPlayerPos (vec2 uv, float depth)
+    {   
+        return viewToPlayerPos(screenToViewPos(uv, depth));
     }
 
     vec3 playerToScreenPos (vec3 playerPos)

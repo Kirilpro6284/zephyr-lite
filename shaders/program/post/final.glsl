@@ -6,6 +6,7 @@
 #include "/include/utility/packing.glsl"
 #include "/include/text/text.glsl"
 #include "/include/post/bloom.glsl"
+#include "/include/utility/colorMatrices.glsl"
 
 layout (location = 0) out vec4 color;
 
@@ -22,12 +23,10 @@ void main ()
         float exposure = MANUAL_EXPOSURE;
     #endif
 
-    color.rgb = pow(tonemap(color.rgb * exposure), vec3(1.0 / 2.2)) + getBlueNoise(gl_FragCoord.xy) * rcp(255.0) - rcp(510.0);
+    color.rgb = pow(tonemap(color.rgb * exposure) * ap1ToRgb, vec3(1.0 / 2.2)) + getBlueNoise(gl_FragCoord.xy) * rcp(255.0) - rcp(510.0);
 
-    //color.rgb = hideGUI ? vec3(texelSize * gl_FragCoord.xy, playerLookVector.y * 0.5 + 0.5) : texture(depthtex2, mix(vec3(0.5 / 48.0), vec3(47.5 / 48.0), vec3(texelSize * gl_FragCoord.xy, playerLookVector.y * 0.5 + 0.5))).rgb;
-
-    //color.rgb = texelFetch(colortex5, texel, 0).rgb;
-
+   // color.rgb = decodeRgbe8(texelFetch(scattering, texel >> 2, 0)) * 20.0;
+ 
     #ifdef ENABLE_TEXT_RENDERING
         #define FONT_SIZE 2 // [1 2 3 4 5 6 7 8]
         
@@ -39,7 +38,7 @@ void main ()
 
         printLine();
 
-        printVec2(vec2(textureSize(colortex7, 0)));
+        printVec3(rgbToAp1[1]);
 
         endText(color.rgb);
     #endif

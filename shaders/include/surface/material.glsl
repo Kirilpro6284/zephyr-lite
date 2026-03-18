@@ -28,7 +28,7 @@ vec4 getHardcodedSpecular (vec3 albedo, uint blockId) {
             } else {
                 if (blockId < 6) {
                     if (blockId < 5) {
-                        specularData.r = sqrt(luminance(albedo));
+                        specularData.r = sqrt(dot(albedo, rgbToXyz[1]));
                         specularData.g = 1.0;
                     } else {
 
@@ -73,7 +73,7 @@ vec4 getHardcodedSpecular (vec3 albedo, uint blockId) {
             }
         }
     } else if (blockId < 64) {
-        specularData.a = sqr(luminance(albedo)) * 254.0 / 255.0;
+        specularData.a = sqr(dot(albedo, rgbToXyz[1])) * 254.0 / 255.0;
     }
     
     return specularData;
@@ -84,7 +84,7 @@ Material applySpecularMap (vec4 specularData, vec3 albedo) {
 
     mat.roughness = pow(1.0 - specularData.r, 2.0);
     mat.sssAmount = specularData.b > 64.5 / 255.0 ? (specularData.b * 255.0 / 191.0 - 64.0 / 191.0) : 0.0;
-    mat.emission = (specularData.a < 254.5 / 255.0 ? specularData.a * 255.0 / 254.0 : 0.0);
+    mat.emission = EMISSION_BRIGHTNESS * (specularData.a < 254.5 / 255.0 ? specularData.a * 255.0 / 254.0 : 0.0);
 
     int reflectanceValue = int(specularData.g * 255.0 + 0.5);
     float metallic;

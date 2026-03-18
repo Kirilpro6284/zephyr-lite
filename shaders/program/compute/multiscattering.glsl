@@ -21,7 +21,7 @@ void main ()
     if (frameCounter > 128) return;
 
     ivec2 texel = ivec2(gl_GlobalInvocationID.xy);
-    uint state = gl_GlobalInvocationID.x + 32u * gl_GlobalInvocationID.y + 32u * 32u * (frameCounter & 127u);
+    uint state = gl_GlobalInvocationID.x + 32u * gl_GlobalInvocationID.y + 32u * 32u * frameCounter;
 
     vec2 uv = vec2(gl_GlobalInvocationID.xy) * rcp(31.0);
 

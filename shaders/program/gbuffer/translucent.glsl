@@ -17,7 +17,7 @@ uniform float alphaTestRef = 0.1;
 noperspective in float reversedDepth;
 
 in vec2 texcoord;
-in vec2 lightLevels;
+in vec2 lmcoord;
 in vec3 vertexNormal;
 in vec3 vertexColor;
 
@@ -34,7 +34,18 @@ void main ()
 
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
 
-    albedo.rgb = pow(albedo.rgb, vec3(2.2));
+    albedo.rgb = pow(albedo.rgb, vec3(2.2)) * rgbToAp1Unlit;
+
+    Material mat = Material(
+        albedo.rgb,
+        vec3(0.4),
+        0.2,
+        0.5,
+        0.0
+    );
+
+    vec2 lightLevels = adjustLightLevels(lmcoord);
+    float dither = getInterleavedGradientNoise(gl_FragCoord.xy);
 
     vec3 screenPos = vec3(internalTexelSize * gl_FragCoord.xy, reversedDepth);
 
@@ -46,18 +57,16 @@ void main ()
     fragColor.rgb = getSceneLighting(
         playerPos, 
         viewDir,
-        getBlueNoise(gl_FragCoord.xy).r, 
-        0.2,
-        0.5,
+        mat,
+        getSkyIrradiance(vertexNormal) * lightLevels.y,
         vertexNormal,
         vertexNormal,
-        albedo.rgb,
-        vec3(0.4),
-        lightLevels
+        lightLevels,
+        dither,
+        1.0
     );
 
-    fragColor.rgb = mix(fragColor.rgb, getScreenSpaceReflections(screenPos, playerPos, reflectedDir, getInterleavedGradientNoise(gl_FragCoord.xy), lightLevels.y), getSchlickFresnel(vec3(0.4), dot(reflectedDir, vertexNormal)));
-
+    fragColor.rgb = mix(fragColor.rgb, getSpecularReflections(screenPos, playerPos, reflectedDir, dither, lightLevels.y), getSchlickFresnel(vec3(0.4), dot(reflectedDir, vertexNormal)));
     fragColor.a = albedo.a;
 
     if (albedo.a < alphaTestRef) discard;
@@ -70,7 +79,7 @@ void main ()
 noperspective out float reversedDepth;
 
 out vec2 texcoord;
-out vec2 lightLevels;
+out vec2 lmcoord;
 out vec3 vertexNormal;
 out vec3 vertexColor;
 
@@ -84,7 +93,7 @@ void main ()
     gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, TAAU_RENDER_SCALE);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
-    lightLevels = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
+    lmcoord = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
     vertexColor = gl_Color.rgb;
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
     

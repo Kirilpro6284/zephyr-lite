@@ -32,11 +32,13 @@
     uniform usampler2D colortex9;
     uniform usampler2D colortex8;
 
+    uniform sampler2D colortex12;
     uniform sampler2D colortex11;
     uniform sampler2D colortex10;
     uniform sampler2D colortex7;
     uniform sampler2D colortex6;
     uniform sampler2D colortex5;
+    uniform sampler2D colortex3;
     uniform sampler2D colortex1;
 
     uniform sampler2D vxDepthTexOpaque;
@@ -106,6 +108,7 @@
     uniform vec2 screenSize;
     uniform vec2 texelSize; 
 
+    uniform float shadowLightBrightness;
     uniform float eyeAltitude;
     uniform float near;
 

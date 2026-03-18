@@ -2,10 +2,11 @@
     #define INCLUDE_ATMOSPHERE
 
     #include "/include/utility/textureSampling.glsl"
+    #include "/include/utility/colorMatrices.glsl"
 
     #define SKY_RAYLEIGH_R 1.0
     #define SKY_RAYLEIGH_G 1.0
-    #define SKY_RAYLEIGH_B 1.25
+    #define SKY_RAYLEIGH_B 1.0
 
     #define SKY_MIE 4.0
     #define SKY_OZONE 0.4
@@ -17,10 +18,12 @@
     #define ALTITUDE_BIAS 512.0
 
     #define SKY_TRANSMITTANCE_BOTTOM_LEFT ivec2(160, 224)
+    #define SKY_IRRADIANCE_BOTTOM_LEFT ivec2(128, 216)
     #define SKY_MS_BOTTOM_LEFT ivec2(128, 224)
     #define SKY_VIEW_BOTTOM_LEFT ivec2(0, 128)
 
     #define SKY_TRANSMITTANCE_RES ivec2(32, 32)
+    #define SKY_IRRADIANCE_RES ivec2(8, 8)
     #define SKY_MS_RES ivec2(32, 32)
     #define SKY_VIEW_RES ivec2(128, 128)
 
@@ -30,9 +33,9 @@
     const vec2 scaleHeights = vec2(8000.0, 1250.0);
     const vec2 invScaleHeights = rcp(scaleHeights);
 
-    const vec3 betaR = vec3(SKY_RAYLEIGH_R, SKY_RAYLEIGH_G, SKY_RAYLEIGH_B) * pow(vec3(680.0, 530.0, 440.0), vec3(-4.0)) * 1e6;
-    const vec3 betaM = SKY_MIE * vec3(1e-5);
-    const vec3 betaO = SKY_OZONE * vec3(1.9, 2.7, 0.1) * 1e-6;
+    const vec3 betaR = vec3(SKY_RAYLEIGH_R, SKY_RAYLEIGH_G, SKY_RAYLEIGH_B) * pow(vec3(680.0, 530.0, 440.0), vec3(-4.0)) * 1e6 * rgbToAp1Unlit;
+    const vec3 betaM = SKY_MIE * vec3(1e-5) * rgbToAp1Unlit;
+    const vec3 betaO = SKY_OZONE * vec3(1.9, 2.7, 0.1) * 1e-6 * rgbToAp1Unlit;
     
     const vec2 isotropicPhase = vec2(6.0 * rcp(16.0 * PI), rcp(4.0 * PI));
 
@@ -87,7 +90,7 @@
 
     vec3 getTransmittance (vec3 lightDir) 
     {
-        return getTransmittance(vec3(0.0, planetRadius + eyeAltitude + ALTITUDE_BIAS, 0.0), lightDir);
+        return getTransmittance(vec3(0.0, planetRadius + 256.0, 0.0), lightDir);
     }
 
     vec3 getMultipleScattering (vec3 rayPos, vec3 lightDir, float rayHeight)
@@ -113,6 +116,13 @@
         uv.x = w > 0.0001 ? -liftInv(asin(clamp(inversesqrt(w) * dot(sunDir.xz, rayDir.xz), -1.0, 1.0)) * rcp(HALF_PI), 0.5) * 0.5 + 0.5 : 0.0;
 
         uv = rcp(256.0) * mix(vec2(SKY_VIEW_BOTTOM_LEFT) + 0.5, vec2(SKY_VIEW_BOTTOM_LEFT + SKY_VIEW_RES) - 0.5, saturate(uv));
+
+        return textureRgbe8(scattering, uv, vec2(256.0));
+    }
+
+    vec3 getSkyIrradiance (vec3 bentNormal) {
+        //return getAtmosphereScattering(normalize(vec3(bentNormal.x, bentNormal.y + 1.0, bentNormal.z)));
+        vec2 uv = rcp(256.0) * mix(vec2(SKY_IRRADIANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_IRRADIANCE_BOTTOM_LEFT + SKY_IRRADIANCE_RES) - 0.5, octEncode(bentNormal));
 
         return textureRgbe8(scattering, uv, vec2(256.0));
     }

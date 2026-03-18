@@ -19,10 +19,10 @@ layout (location = 1) out vec4 shadowcolor1Out;
 void main () {
     vec4 albedo = texture(gtexture, texcoord);
 
-    albedo.rgb *= vertexColor;
+    albedo.rgb = pow(albedo.rgb * vertexColor, vec3(2.2)) * rgbToAp1Unlit;
 
-    shadowcolor0Out = albedo;
-    shadowcolor1Out = vec4(0.0);
+    shadowcolor0Out = gl_FrontFacing ? albedo : vec4(0.0, 0.0, 0.0, 1.0);
+    shadowcolor1Out = vec4(octEncode(vertexNormal), 0.0, float(renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT));
 
     if (renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT && albedo.a < alphaTestRef) discard;
 }
@@ -47,7 +47,7 @@ void main () {
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     vertexColor = gl_Color.rgb;
-    vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
+    vertexNormal = gl_NormalMatrix * gl_Normal;
 
     #ifdef COLORED_LIGHTING
         if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT) {

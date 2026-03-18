@@ -2,6 +2,7 @@
 #include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
+#include "/include/utility/colorMatrices.glsl"
 #include "/include/surface/material.glsl"
 
 uniform float alphaTestRef = 0.1;

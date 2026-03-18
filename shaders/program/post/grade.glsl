@@ -3,6 +3,7 @@
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
 #include "/include/post/bloom.glsl"
+#include "/include/utility/colorMatrices.glsl"
 
 /*
     const bool colortex6MipmapEnabled = true;
@@ -11,8 +12,8 @@
 /* RENDERTARGETS: 10 */
 layout (location = 0) out vec4 color;
 
-const vec3 rodResponse = vec3(0.014, 0.270, 0.716);
-const vec3 purkinjeTint = 0.5 * vec3(1.0, 1.625, 2.5);
+const vec3 rodResponse = vec3(0.014, 0.270, 0.716) * rgbToAp1Unlit;
+const vec3 purkinjeTint = 0.5 * vec3(1.0, 1.625, 2.5) * rgbToAp1Unlit;
 
 vec3 getPurkinjeShift (vec3 color)
 {

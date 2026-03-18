@@ -33,13 +33,34 @@
     #define SSR_PRIMARY_STEP_COUNT 16
     #define SSR_REFINEMENT_STEP_COUNT 8
 
+    #define SUNLIGHT_TINT_R 1.00
+    #define SUNLIGHT_TINT_G 0.94
+    #define SUNLIGHT_TINT_B 0.85
+
+    #define SKYLIGHT_TINT_R 1.00
+    #define SKYLIGHT_TINT_G 1.12
+    #define SKYLIGHT_TINT_B 0.96
+
+    #define SUNLIGHT_TINT vec3(SUNLIGHT_TINT_R, SUNLIGHT_TINT_G, SUNLIGHT_TINT_B)
+    #define SKYLIGHT_TINT vec3(SKYLIGHT_TINT_R, SKYLIGHT_TINT_G, SKYLIGHT_TINT_B)
+
     #define NIGHT_BRIGHTNESS 0.005 // [0.001 0.002 0.003 0.004 0.005 0.006 0.007 0.008 0.009 0.010]
+
+    #define INDIRECT_LIGHTING
+    #define INDIRECT_TEMPORAL_BLEND_WEIGHT 0.0625
+
+    #define GTAO_RADIUS 0.5
+    #define GTAO_SLICES 1
+    #define GTAO_HORIZON_STEPS 6
+
+    #define SUNLIGHT_GI_SAMPLES 16
+    #define SUNLIGHT_GI_RANGE 4.0
 
     #define SSS_ENABLED
     #define SSS_INTENSITY 0.5  // [1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0 19.0 20.0 21.0 22.0 23.0 24.0 25.0 27.0 28.0 29.0 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0 40.0]
     #define SSS_ABSORPTION 15.0 // [1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0 9.5 10.0 10.5 11.0 11.5 12.0 12.5 13.0 13.5 14.0 14.5 15.0 15.5 16.0]
 
-    #define tonemap tonyMcMapface // [agx lottes neutral acesFilmic reinhard2 exponential tonemap_none tonyMcMapface]
+    #define tonemap acesFilmic // [agx lottes neutral acesFilmic reinhard2 exponential tonemap_none tonyMcMapface]
 
     #define TAA
     #define TEMPORAL_UPSAMPLING 100 // [25 33 50 66 75 83 100]

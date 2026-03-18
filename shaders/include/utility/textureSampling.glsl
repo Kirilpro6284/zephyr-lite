@@ -3,8 +3,8 @@
 
 #include "/include/utility/packing.glsl"
 
-vec3 textureRgbe8 (sampler2D rgbeSampler, vec2 uv, vec2 texSize) {
-    vec2 coord = texSize * uv - 0.5;
+vec3 textureRgbe8 (sampler2D rgbeSampler, vec2 coord, vec2 texSize) {
+    coord = texSize * coord - 0.5;
     ivec2 texel = ivec2(coord);
 
     vec3 result = vec3(0.0);
@@ -20,8 +20,8 @@ vec3 textureRgbe8 (sampler2D rgbeSampler, vec2 uv, vec2 texSize) {
     return result;
 }
 
-vec3 textureRgbe8 (sampler3D rgbeSampler, vec3 uv, vec3 texSize) {
-    vec3 coord = texSize * uv - 0.5;
+vec3 textureRgbe8 (sampler3D rgbeSampler, vec3 coord, vec3 texSize) {
+    coord = texSize * coord - 0.5;
     ivec3 texel = ivec3(coord);
 
     vec3 result = vec3(0.0);

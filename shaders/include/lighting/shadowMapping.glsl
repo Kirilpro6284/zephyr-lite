@@ -78,10 +78,10 @@
         vec4 integratedData = vec4(0.0);
         distortDiff *= 0.5;
 
-        vec2 sampleState = vogelState;
+        vec2 sampleState = kernelRadius * vogelState;
 
         for (int i = 0; i < SHADOW_SAMPLES; i++) {
-            float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
+            float sampleDist = sqrt(fract(0.4301597 * i + 0.5));
             sampleState *= vogelPhase;
 
             integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos.xy + distortDiff * sampleDist * sampleState, shadowDistortPos.z)).r;
@@ -93,11 +93,11 @@
                              * smoothstep(-1.0, -0.99, -abs(shadowPos.y));
 
         #ifdef COLORED_SHADOWS
-            sampleState = vogelState;
+            sampleState = kernelRadius * vogelState;
             float kernelSum = 0.0;
 
             for (int i = 0; i < SHADOW_SAMPLES; i++) {
-                float sampleDist = kernelRadius * sqrt(fract(0.4301597 * i + 0.5));
+                float sampleDist = sqrt(fract(0.4301597 * i + 0.5));
                 sampleState *= vogelPhase;
 
                 ivec2 sampleTexel = ivec2(float(shadowMapResolution) * (shadowDistortPos.xy + distortDiff * sampleDist * sampleState));
