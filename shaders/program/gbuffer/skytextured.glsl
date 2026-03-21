@@ -31,7 +31,7 @@ void main ()
 
     if (renderStage == MC_RENDER_STAGE_MOON) albedo.rgb = vec3(luminance(albedo.rgb));
 
-    albedo.rgb *= vertexColor * pow(getTransmittance(viewDir), vec3(1.0 / 2.2));
+    albedo.rgb *= vertexColor * pow(getAtmosphereTransmittance(viewDir), vec3(1.0 / 2.2));
 
     colortex10Out = encodeRgbe8(albedo.rgb);
 

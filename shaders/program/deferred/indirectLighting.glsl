@@ -15,7 +15,6 @@ layout (location = 0) out vec4 indirectIrradiance;
 layout (location = 1) out vec4 temporalDepth;
 
 void main () {
-    ivec2 srcTexel = ivec2(gl_FragCoord.xy);
     ivec2 texel = ivec2(gl_FragCoord.xy * rcp(indirectRenderScale));
 
     vec2 uv = rcp(indirectRenderScale) * internalTexelSize * gl_FragCoord.xy;
@@ -56,10 +55,10 @@ void main () {
     vec4 ao = getAmbientOcclusion(vec3(uv, depth), viewPos, mat3(gbufferModelView) * textureNormal, dither);
     vec3 radiance =  getBouncedSunlight(mat3(shadowModelView) * playerPos + shadowModelView[3].xyz, textureNormal, dither);
          radiance += lightLevels.y * getFakeBouncedSunlight(ao.xyz);
-         radiance *= shadowLightBrightness * getTransmittance(shadowDir);
+         radiance *= shadowLightBrightness * getAtmosphereTransmittance(shadowDir);
          radiance += lightLevels.y * 0.4 * getSkyIrradiance(ao.xyz);
 
-    vec4 prevPos = lodProjMatPrev0 * gbufferPreviousModelView * vec4(playerPos + cameraVelocity, 1.0);
+    vec4 prevPos = lodProjMatPrev0 * gbufferPreviousModelView * vec4(playerPos + step(0.08, dot(playerPos, playerPos)) * cameraVelocity, 1.0);
          prevPos.xyz /= prevPos.w;
     
     vec2 prevUv = (prevPos.xy + taa_offset_prev) * 0.5 + 0.5;

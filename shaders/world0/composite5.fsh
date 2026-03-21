@@ -1,3 +1,3 @@
 #version 430 compatibility
 
-#include "/program/post/bloom3.glsl"
+#include "/program/post/bloom2.glsl"

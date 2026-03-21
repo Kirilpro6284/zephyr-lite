@@ -5,10 +5,6 @@
 #include "/include/post/bloom.glsl"
 #include "/include/utility/colorMatrices.glsl"
 
-/*
-    const bool colortex6MipmapEnabled = true;
-*/
-
 /* RENDERTARGETS: 10 */
 layout (location = 0) out vec4 color;
 
@@ -30,8 +26,6 @@ void main ()
     vec3 currData = decodeRgbe8(texelFetch(colortex10, texel, 0));
 
     currData += getBloom(uv);
-
-    if (texel == ivec2(0)) renderState.averageLuminance = mix(renderState.averageLuminance, clamp(luminance(textureLod(colortex6, vec2(0.5), 16.0).rgb), 0.002, 0.02), 0.02);
 
     #ifdef PURKINJE_EFFECT    
         currData = getPurkinjeShift(currData).rgb;

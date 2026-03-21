@@ -24,7 +24,7 @@ void main ()
     rayDir.xz = vec2(cos(w), sin(w));
     rayDir.xz = sqrt(1.0 - rayDir.y * rayDir.y) * normalize(vec2(rayDir.x * sunDir.x - rayDir.z * sunDir.z, rayDir.x * sunDir.z + rayDir.z * sunDir.x));
     
-    vec3 currPos = vec3(0.0, planetRadius + eyeAltitude + ALTITUDE_BIAS, 0.0);
+    vec3 currPos = vec3(0.0, planetRadius + ALTITUDE_BIAS, 0.0);
 
     vec3 integratedData = evalAtmosphereScattering(currPos, rayDir, sunDir) + NIGHT_BRIGHTNESS * evalAtmosphereScattering(currPos, rayDir, moonDir);
 

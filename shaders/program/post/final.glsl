@@ -20,7 +20,7 @@ void main ()
     color.a = 1.0;
 
     #ifdef DYNAMIC_EXPOSURE
-        float exposure = 0.1 / renderState.averageLuminance;
+        float exposure = 1.0 / texelFetch(colortex6, ivec2(0), 0).a;
     #else
         float exposure = MANUAL_EXPOSURE;
     #endif

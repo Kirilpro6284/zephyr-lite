@@ -1,11 +1,6 @@
 #ifndef INCLUDE_UNIFORMS
     #define INCLUDE_UNIFORMS
 
-    layout (std430, binding = 0) buffer render_state
-    {
-        float averageLuminance;
-    } renderState;
-
     layout (r8ui) uniform uimage3D voxelBuffer;
     layout (rgba8) uniform image3D lightBuffer;
     layout (rgba8) uniform image2D imgScattering;

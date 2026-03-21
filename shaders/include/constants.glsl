@@ -16,7 +16,7 @@ const bool shadowHardwareFiltering = true;
 #endif
 
 /*  
-    const int colortex1Format = RGBA16F; // translucent objects (translucent -> composite)
+    const int colortex1Format = RGBA16F; // translucent objects (translucent -> composite), average luminance (composite -> temporal)
     const int colortex3Format = RGBA16F; // indirect lighting history
     const int colortex5Format = R11F_G11F_B10F; // bloom tiles
     const int colortex6Format = RGBA16F; // TAA history (temporal)

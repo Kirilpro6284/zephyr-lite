@@ -4,6 +4,7 @@
 #include "/include/utility/packing.glsl"
 #include "/include/utility/colorMatrices.glsl"
 #include "/include/surface/material.glsl"
+#include "/include/utility/spaceConversion.glsl"
 
 uniform float alphaTestRef = 0.1;
 
@@ -71,10 +72,14 @@ out vec3 vertexNormal;
 out vec4 vertexTangent;
 
 void main ()
-{
+{   
     vec3 viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
 
     gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
+
+    #ifdef STAGE_HAND
+        viewPos = projectAndDivide(gbufferProjectionInverse, gl_Position.xyz / gl_Position.w);
+    #endif
 
     gl_Position.xy += gl_Position.w * taa_offset;
     gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, taauRenderScale);

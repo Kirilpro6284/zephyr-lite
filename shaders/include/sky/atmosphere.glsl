@@ -16,7 +16,7 @@
 
     #define SCATTER_POINTS 64
 
-    #define ALTITUDE_BIAS 512.0
+    #define ALTITUDE_BIAS 250.0
 
     #define SKY_TRANSMITTANCE_BOTTOM_LEFT ivec2(160, 224)
     #define SKY_IRRADIANCE_BOTTOM_LEFT ivec2(128, 216)
@@ -70,7 +70,7 @@
     }
 
 #ifndef STAGE_SETUP
-    vec3 getTransmittance (vec3 pos, vec3 lightDir) 
+    vec3 getAtmosphereTransmittance (vec3 pos, vec3 lightDir) 
     {
         float sqrLength = dot(pos, pos);
         float invLength = inversesqrt(sqrLength);
@@ -89,9 +89,9 @@
         return textureRgbe8(scattering, uv, vec2(256.0));
     }
 
-    vec3 getTransmittance (vec3 lightDir) 
+    vec3 getAtmosphereTransmittance (vec3 lightDir) 
     {
-        return getTransmittance(vec3(0.0, planetRadius + 256.0, 0.0), lightDir);
+        return getAtmosphereTransmittance(vec3(0.0, planetRadius + ALTITUDE_BIAS, 0.0), lightDir);
     }
 
     vec3 getMultipleScattering (vec3 rayPos, vec3 lightDir, float rayHeight)
@@ -156,7 +156,7 @@
             opticalDepth += -min1(float(i) + 0.5) * (betaR * density.x + betaM * density.y + betaO * density.z);
 
             integratedData += exp(opticalDepth) * (
-                getTransmittance(rayPos, lightDir) * (betaR * phase.x * density.x + betaM * phase.y * density.y) 
+                getAtmosphereTransmittance(rayPos, lightDir) * (betaR * phase.x * density.x + betaM * phase.y * density.y) 
               + getMultipleScattering(rayPos, lightDir, rayHeight) * (betaR * isotropicPhase.x * density.x + betaM * isotropicPhase.y * density.y)
             );
         }

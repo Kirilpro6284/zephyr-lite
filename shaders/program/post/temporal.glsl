@@ -4,6 +4,11 @@
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
 #include "/include/utility/packing.glsl"
+#include "/include/utility/colorMatrices.glsl"
+
+/*
+    const bool colortex1MipmapEnabled = true;
+*/
 
 /* RENDERTARGETS: 6,10 */
 layout (location = 0) out vec4 history;
@@ -32,9 +37,8 @@ void main ()
         depth = min(depth, texelFetch(lodDepthTex1, srcTexel + ivec2(i >> 1, i & 1) * 2 - 1, 0).r);
     }
 
-    vec3 playerPos = screenToPlayerPos(uv, depth).xyz;
-
-    vec4 prevPos = lodProjMatPrev0 * gbufferPreviousModelView * vec4(playerPos.xyz + step(0.05, dot(playerPos.xyz, playerPos.xyz)) * cameraVelocity, 1.0);
+    vec3 playerPos = screenToPlayerPos(uv, depth);
+    vec4 prevPos = lodProjMatPrev0 * gbufferPreviousModelView * vec4(playerPos + step(0.08, dot(playerPos, playerPos)) * cameraVelocity, 1.0);
 
     vec2 prevUv = prevPos.xy / prevPos.w;
     prevUv = (prevUv + taa_offset) * 0.5 + 0.5;
@@ -75,5 +79,7 @@ void main ()
         } else history = vec4(currData.rgb, TAA_TEMPORAL_W_CLAMP);
     } else history = vec4(currData.rgb, 1.0);
 
-    color = any(isnan(history)) ? vec4(0.0) : encodeRgbe8(history.rgb);
+    color = encodeRgbe8(any(isnan(history)) ? currData.rgb : history.rgb);
+    
+    if (srcTexel == ivec2(0)) history.a = mix(texelFetch(colortex6, ivec2(0), 0).a, sqrt(max0(exp(textureLod(colortex1, vec2(0.5), 16.0).r) - 0.003)), ADAPTATION_SPEED);
 }

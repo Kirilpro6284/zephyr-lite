@@ -21,6 +21,8 @@ void main () {
 
     albedo.rgb = pow(albedo.rgb * vertexColor, vec3(2.2)) * rgbToAp1Unlit;
 
+    if (renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT && albedo.a > 0.99) albedo.a = 0.99;
+
     shadowcolor0Out = gl_FrontFacing ? albedo : vec4(0.0, 0.0, 0.0, 1.0);
     shadowcolor1Out = vec4(octEncode(vertexNormal), 0.0, float(renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT));
 

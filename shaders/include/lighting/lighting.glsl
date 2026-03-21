@@ -81,12 +81,14 @@ vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither) {
         vec3 shadowViewNormal = mat3(shadowModelView) * bentNormal;
         vec2 shadowClipPos = shadowProjScale.xy * shadowViewPos.xy;
 
-        vec2 sampleState = shadowProjScale.x * SUNLIGHT_GI_RANGE * vec2(cos(dither.x * TWO_PI), sin(dither.x * TWO_PI));
+        vec2 sampleState = shadowProjScale.x * SUNLIGHT_GI_RANGE * vec2(cos(dither.x * TWO_PI * rcp(SUNLIGHT_GI_SAMPLES)), sin(dither.x * TWO_PI * rcp(SUNLIGHT_GI_SAMPLES)));
+        mat2 samplePhase = rotate(rcp(SUNLIGHT_GI_SAMPLES) * TWO_PI);
+
         vec3 integratedData = vec3(0.0);
 
         for (int i = 0; i < SUNLIGHT_GI_SAMPLES; i++) {
             float sampleDist = fract(0.4301597 * i + dither.y);
-            sampleState *= vogelPhase;
+            sampleState *= samplePhase;
 
             vec2 sampleClipPos = shadowClipPos + sampleDist * sampleState;
             ivec2 sampleTexel = ivec2(float(shadowMapResolution) * (distortShadowPos(sampleClipPos) * 0.5 + 0.5));
@@ -97,11 +99,12 @@ vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither) {
             float invLength = inversesqrt(max(0.01, sqrLength));
 
             if (invLength > rcp(SUNLIGHT_GI_RANGE)) {
-                vec3 radiance =  sampleDist * texelFetch(shadowcolor0, sampleTexel, 0).rgb;
-                    radiance *= smoothstep(-SUNLIGHT_GI_RANGE, -0.75 * SUNLIGHT_GI_RANGE, -sqrLength * invLength);
-                    radiance *= max0(dot(shadowViewNormal, sampleViewVec));
-                    radiance *= max0(-dot(octDecode(texelFetch(shadowcolor1, sampleTexel, 0).rg), sampleViewVec));
-                    radiance *= sqr(invLength * invLength);
+                vec4 albedo = texelFetch(shadowcolor0, sampleTexel, 0);
+                vec3 radiance =  sampleDist * albedo.rgb * (1.0 - albedo.a * step(albedo.a, 0.99));
+                     radiance *= smoothstep(-SUNLIGHT_GI_RANGE, -0.75 * SUNLIGHT_GI_RANGE, -sqrLength * invLength);
+                     radiance *= max0(dot(shadowViewNormal, sampleViewVec));
+                     radiance *= max0(-dot(octDecode(texelFetch(shadowcolor1, sampleTexel, 0).rg), sampleViewVec));
+                     radiance *= sqr(invLength * invLength);
 
                 integratedData += radiance;
             }
@@ -144,22 +147,23 @@ vec3 getSceneLighting (
     vec3 geoNormal,
     vec3 textureNormal,
     vec2 lightLevels,
+    float skylightFactor,
     float dither,
     float ao
 ) {
-    vec3 shadowViewPos = mat3(shadowModelView) * playerPos + shadowModelView[3].xyz;
+    vec3 shadowViewPos = mat3(shadowModelView) * mix(playerPos, floor(playerPos + cameraPositionFract + geoNormal * 0.25) + 0.5 - cameraPositionFract, 0.2 * (1.0 - skylightFactor)) + shadowModelView[3].xyz;
 
     #ifdef SHADOW_VPS
         float blockerDepth = getBlockerDepth(shadowViewPos, dither);
     #endif
 
-    vec3 transmittance = shadowLightBrightness * SUNLIGHT_TINT * getTransmittance(shadowDir);
+    vec3 transmittance = shadowLightBrightness * SUNLIGHT_TINT * getAtmosphereTransmittance(shadowDir);
 
-    vec3 radiance = mat.albedo * (mat.emission + ao * (indirectIrradiance + getBlocklight(playerPos + textureNormal * 0.5)));
+    vec3 radiance = mat.albedo * (mat.emission + ao * (vec3(0.5, 0.7, 1.0) * 0.0005 + indirectIrradiance + getBlocklight(playerPos + textureNormal * 0.5)));
 
     radiance += transmittance * evalCookBRDF(shadowDir, -viewDir, mat.roughness, textureNormal, mat.albedo, mat.f0) * getShadow(shadowViewPos, geoNormal, dither
         #ifdef SHADOW_VPS
-            , blockerDepth
+            , blockerDepth * (skylightFactor * 0.9 + 0.1)
         #endif
     );
 

@@ -75,6 +75,7 @@ void main () {
         geoNormal,
         textureNormal,
         lightLevels,
+        smoothstep(0.2, 0.4, normalData.w),
         getInterleavedGradientNoise(gl_FragCoord.xy),
         indirectIrradiance.w
     ));
