@@ -15,21 +15,17 @@
 #define torad(x)     (0.01745329 * x)
 #define hermite(x)   smoothstep(0.0, 1.0, x)
 
-#if TEMPORAL_UPSAMPLING == 100
-    #define TAAU_RENDER_SCALE 1.0
-#elif TEMPORAL_UPSAMPLING == 83
-    #define TAAU_RENDER_SCALE 0.83
-#elif TEMPORAL_UPSAMPLING == 75
-    #define TAAU_RENDER_SCALE 0.75
-#elif TEMPORAL_UPSAMPLING == 66
-    #define TAAU_RENDER_SCALE 0.66
-#elif TEMPORAL_UPSAMPLING == 50
-    #define TAAU_RENDER_SCALE 0.50
-#elif TEMPORAL_UPSAMPLING == 33
-    #define TAAU_RENDER_SCALE 0.33
-#elif TEMPORAL_UPSAMPLING == 25
-    #define TAAU_RENDER_SCALE 0.25
+#if TEMPORAL_UPSAMPLING == 1
+    const float taauRenderScale = 1.0;
+#elif TEMPORAL_UPSAMPLING == 2
+    const float taauRenderScale = 0.7071;
+#elif TEMPORAL_UPSAMPLING == 3
+    const float taauRenderScale = 0.5773;
+#elif TEMPORAL_UPSAMPLING == 4
+    const float taauRenderScale = 0.5;
 #endif
+
+const float indirectRenderScale = 0.01 * INDIRECT_RENDER_SCALE;
 
 const mat2 vogelPhase = mat2(cos(0.2451223 * TWO_PI), -sin(0.2451223 * TWO_PI), sin(0.2451223 * TWO_PI), cos(0.2451223 * TWO_PI));
 

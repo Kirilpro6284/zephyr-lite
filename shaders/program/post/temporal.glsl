@@ -14,8 +14,8 @@ void main ()
     ivec2 texel = ivec2(gl_FragCoord.xy);
 
     #if TEMPORAL_UPSAMPLING < 100 
-        ivec2 srcTexel = ivec2(TAAU_RENDER_SCALE * gl_FragCoord.xy);
-        ivec2 dstTexel = ivec2((vec2(srcTexel) - internalScreenSize * taa_offset * 0.5 + 0.5) / TAAU_RENDER_SCALE);
+        ivec2 srcTexel = ivec2(taauRenderScale * gl_FragCoord.xy);
+        ivec2 dstTexel = ivec2(rcp(taauRenderScale) * (vec2(srcTexel) - internalScreenSize * taa_offset * 0.5 + 0.5));
     #else
         ivec2 srcTexel = texel;
         ivec2 dstTexel = srcTexel;
@@ -65,7 +65,10 @@ void main ()
             prevData.rgb = clamp(prevData.rgb, colorMin, colorMax);
             prevData.w   = clamp(prevData.w, 1.0, TAA_TEMPORAL_W_CLAMP);
 
+            const float offcenterRejection = 0.2;
+
             float alpha = rcp(prevData.w);
+                  alpha = mix(1.0, alpha, exp(-offcenterRejection * (1.0 - (1.0 - 2.0 * abs(fract(prevUv.x * screenSize.x) - 0.5)) * (1.0 - 2.0 * abs(fract(prevUv.y * screenSize.y) - 0.5)))));
 
             history.rgb = exp(mix(log(prevData.rgb + 1e-3), log(currData.rgb + 1e-3), isUnderSample && prevData.w > 1.0 ? 0.0005 : alpha)) - 1e-3;
             history.w = prevData.w + (isUnderSample ? 0.0005 : 1.0);

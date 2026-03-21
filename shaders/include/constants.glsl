@@ -24,7 +24,7 @@ const bool shadowHardwareFiltering = true;
     const int colortex8Format = RG32UI; // gbuffer data 0: albedo (8:8:8), blockId (8), geoNormal (8:8), lightLevels (8:8) (solid -> deferred)
     const int colortex9Format = RG32UI; // gbuffer data 1: textureNormal (16:16), specularMap (8:8:8:8) (solid -> deferred)
     const int colortex10Format = RGBA8; // sun & moon geometry (skytextured -> deferred), post-processing data (temporal -> post)
-    const int colortex12Format = R16F; // previous frame depth buffer
+    const int colortex12Format = R32F; // previous frame depth buffer
 
     const bool colortex1Clear = true;
     const bool colortex3Clear = false;

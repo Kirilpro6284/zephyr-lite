@@ -109,7 +109,9 @@
     uniform vec2 texelSize; 
 
     uniform float shadowLightBrightness;
+    uniform float worldTimeErf;
     uniform float eyeAltitude;
+    uniform float aspectRatio;
     uniform float near;
 
     uniform ivec3 previousCameraPositionInt;

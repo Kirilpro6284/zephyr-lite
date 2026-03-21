@@ -53,7 +53,7 @@ void main ()
     gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
     gl_Position.xy += gl_Position.w * taa_offset;
-    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, TAAU_RENDER_SCALE);
+    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, taauRenderScale);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     playerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;

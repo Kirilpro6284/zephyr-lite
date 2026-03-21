@@ -7,6 +7,8 @@
 #include "/include/text/text.glsl"
 #include "/include/post/bloom.glsl"
 #include "/include/utility/colorMatrices.glsl"
+#include "/include/sky/atmosphere.glsl"
+#include "/include/utility/spaceConversion.glsl"
 
 layout (location = 0) out vec4 color;
 
@@ -25,7 +27,7 @@ void main ()
 
     color.rgb = pow(tonemap(color.rgb * exposure) * ap1ToRgb, vec3(1.0 / 2.2)) + getBlueNoise(gl_FragCoord.xy) * rcp(255.0) - rcp(510.0);
 
-   // color.rgb = decodeRgbe8(texelFetch(scattering, texel >> 2, 0)) * 20.0;
+    //color.rgb = 15.0 * getSkyIrradiance(screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, -0.5));
  
     #ifdef ENABLE_TEXT_RENDERING
         #define FONT_SIZE 2 // [1 2 3 4 5 6 7 8]
@@ -38,7 +40,7 @@ void main ()
 
         printLine();
 
-        printVec3(rgbToAp1[1]);
+        printFloat(worldTimeErf);
 
         endText(color.rgb);
     #endif

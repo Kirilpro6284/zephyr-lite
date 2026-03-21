@@ -3,7 +3,7 @@
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
 #include "/include/sky/atmosphere.glsl"
-#include "/include/utility/brdf.glsl"
+#include "/include/utility/bsdf.glsl"
 #include "/include/lighting/shadowMapping.glsl"
 #include "/include/lighting/floodfill.glsl"
 #include "/include/lighting/lighting.glsl"
@@ -58,7 +58,7 @@ void main ()
         playerPos, 
         viewDir,
         mat,
-        getSkyIrradiance(vertexNormal) * lightLevels.y,
+        lightLevels.y * 0.4 * getSkyIrradiance(vertexNormal),
         vertexNormal,
         vertexNormal,
         lightLevels,
@@ -90,7 +90,7 @@ void main ()
     gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
     gl_Position.xy += gl_Position.w * taa_offset;
-    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, TAAU_RENDER_SCALE);
+    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, taauRenderScale);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     lmcoord = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;

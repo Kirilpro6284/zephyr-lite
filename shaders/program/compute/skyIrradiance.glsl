@@ -4,7 +4,7 @@
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
 #include "/include/utility/packing.glsl"
-#include "/include/utility/brdf.glsl"
+#include "/include/utility/bsdf.glsl"
 #include "/include/lighting/shadowMapping.glsl"
 #include "/include/sky/atmosphere.glsl"
 
@@ -13,7 +13,7 @@ const ivec3 workGroups = ivec3(8, 8, 1);
 
 shared vec3 skyIrradiance[8][8];
 
-#define SKY_IRRADIANCE_SAMPLES 16
+#define SKY_IRRADIANCE_SAMPLES 64
 
 void main ()
 {

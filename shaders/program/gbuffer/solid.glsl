@@ -77,12 +77,13 @@ void main ()
     gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
     gl_Position.xy += gl_Position.w * taa_offset;
-    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, TAAU_RENDER_SCALE);
+    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, taauRenderScale);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     lightLevels = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
     vertexColor = gl_Color.rgb;
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
+    vertexNormal = normalize(vertexNormal * step(vec3(0.01), abs(vertexNormal)));
     vertexTangent = vec4(mat3(gbufferModelViewInverse) * mat3(gl_ModelViewMatrix) * at_tangent.xyz, at_tangent.w);
 
     reversedDepth = (lodProjMat_2.z * viewPos.z + lodProjMat_3.z) / (lodProjMat_2.w * viewPos.z);

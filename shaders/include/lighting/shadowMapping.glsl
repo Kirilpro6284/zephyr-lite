@@ -11,7 +11,7 @@
         
         vec2 distortShadowPos (vec2 pos) 
         {
-            return sign(pos) * log(c * abs(pos) + 1.0) / log(c + 1.0);
+            return sign(pos) * log2(c * abs(pos) + 1.0) / log2(c + 1.0);
         }
 
         vec2 distortShadowPosDiff (vec2 pos) 
@@ -75,9 +75,9 @@
             float kernelRadius = shadowProjScale.x * penumbraSize;
         #endif
 
-        vec4 integratedData = vec4(0.0);
         distortDiff *= 0.5;
 
+        vec4 integratedData = vec4(0.0);
         vec2 sampleState = kernelRadius * vogelState;
 
         for (int i = 0; i < SHADOW_SAMPLES; i++) {
@@ -111,7 +111,10 @@
                 kernelSum++;
             }
 
-            return shadowGradient * (kernelSum < 0.5 ? vec3(integratedData.w) : (rcp(kernelSum) * integratedData.rgb * integratedData.w)) + (1.0 - shadowGradient);
+            if (kernelSum > 0.5) integratedData.rgb *= rcp(kernelSum);
+            else integratedData.rgb = vec3(1.0);
+
+            return shadowGradient * integratedData.rgb * integratedData.w + (1.0 - shadowGradient);
         #else
             return shadowGradient * vec3(integratedData.w) + (1.0 - shadowGradient);
         #endif

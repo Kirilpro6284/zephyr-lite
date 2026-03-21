@@ -3,6 +3,7 @@
 
     #include "/include/utility/textureSampling.glsl"
     #include "/include/utility/colorMatrices.glsl"
+    #include "/include/utility/bsdf.glsl"
 
     #define SKY_RAYLEIGH_R 1.0
     #define SKY_RAYLEIGH_G 1.0
@@ -121,25 +122,9 @@
     }
 
     vec3 getSkyIrradiance (vec3 bentNormal) {
-        //return getAtmosphereScattering(normalize(vec3(bentNormal.x, bentNormal.y + 1.0, bentNormal.z)));
         vec2 uv = rcp(256.0) * mix(vec2(SKY_IRRADIANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_IRRADIANCE_BOTTOM_LEFT + SKY_IRRADIANCE_RES) - 0.5, octEncode(bentNormal));
 
-        return textureRgbe8(scattering, uv, vec2(256.0));
-    }
-
-    float rayleighPhase (float cosTheta)
-    {
-        return (1.0 + cosTheta * cosTheta) * 3.0 / (16.0 * PI);
-    }
-
-    float schlickPhase (float cosTheta, float k)
-    {
-        return (1.0 - k * k) / (4.0 * PI * sqr(1.0 - k * cosTheta));
-    }
-
-    float kleinNishinaPhase (float cosTheta, float e) 
-    {
-        return e / (TWO_PI * (e * (1.0 - cosTheta) + 1.0) * log(e * 2.0 + 1.0));
+        return SKYLIGHT_TINT * textureRgbe8(scattering, uv, vec2(256.0));
     }
 
     vec3 evalAtmosphereScattering (vec3 rayOrigin, vec3 rayDir, vec3 lightDir)

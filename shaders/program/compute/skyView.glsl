@@ -4,7 +4,7 @@
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
 #include "/include/utility/packing.glsl"
-#include "/include/utility/brdf.glsl"
+#include "/include/utility/bsdf.glsl"
 #include "/include/lighting/shadowMapping.glsl"
 #include "/include/sky/atmosphere.glsl"
 

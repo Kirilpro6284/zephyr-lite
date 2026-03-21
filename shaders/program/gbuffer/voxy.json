@@ -17,7 +17,7 @@
   "taaOffset": "{return taa_offset;}",
   "useViewportDims": true,
   "excludeLodsFromVanillaDepth": true,
-  "renderScale": [TAAU_RENDER_SCALE, TAAU_RENDER_SCALE],
+  "renderScale": [taauRenderScale, taauRenderScale],
   "opaqueDrawBuffers": [8, 9, 11],
   "translucentDrawBuffers": [1]
 }

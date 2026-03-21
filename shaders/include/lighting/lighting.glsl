@@ -30,7 +30,7 @@ float getMaxHorizonAngle (vec2 sliceDir, vec2 screenPos, vec3 viewPos, vec3 view
         float lengthSqu = dot(sampleVec, sampleVec);
 
         float cosTheta = dot(sampleVec, viewDir) * inversesqrt(lengthSqu);
-              cosTheta = mix(cosTheta, -1.0, saturate(lengthSqu - 1.5));
+              cosTheta = mix(cosTheta, -1.0, saturate(lengthSqu - 3.0 * GTAO_RADIUS));
 
         maxTheta = max(maxTheta, cosTheta);
     }
@@ -39,77 +39,84 @@ float getMaxHorizonAngle (vec2 sliceDir, vec2 screenPos, vec3 viewPos, vec3 view
 }
 
 vec4 getAmbientOcclusion (vec3 screenPos, vec3 viewPos, vec3 viewNormal, vec2 dither) {
-    vec3 viewDir = normalize(-viewPos);
-    vec2 stepSize = vec2(lodProjMat_0.x, lodProjMat_1.y) * GTAO_RADIUS * rcp(-GTAO_HORIZON_STEPS * viewPos.z);
+    #if GTAO_SLICES > 0
+        vec3 viewDir = normalize(-viewPos);
+        vec2 stepSize = vec2(lodProjMat_0.x, lodProjMat_1.y) * GTAO_RADIUS * rcp(GTAO_HORIZON_STEPS * max(0.25, -viewPos.z));
 
-    vec3 sliceDir = vec3(cos(TWO_PI * dither.x), sin(TWO_PI * dither.x), 0.0);
-    vec4 integratedData = vec4(0.0);
+        vec3 sliceDir = vec3(cos(TWO_PI * dither.x), sin(TWO_PI * dither.x), 0.0);
+        vec4 integratedData = vec4(0.0);
 
-    for (int i = 0; i < GTAO_SLICES; i++) {
-        sliceDir.xy *= vogelPhase;
+        for (int i = 0; i < GTAO_SLICES; i++) {
+            float sliceAngle = PI * (i + dither.x) * rcp(GTAO_SLICES);
+            vec3 sliceDir = vec3(cos(sliceAngle), sin(sliceAngle), 0.0);
 
-        vec3 tangent = sliceDir - dot(sliceDir, viewDir) * viewDir;
-		vec3 axis = cross(sliceDir, viewDir);
-		vec3 projNormal = viewNormal - axis * dot(viewNormal, axis);
+            vec3 tangent = sliceDir - dot(sliceDir, viewDir) * viewDir;
+            vec3 axis = cross(sliceDir, viewDir);
+            vec3 projNormal = viewNormal - axis * dot(viewNormal, axis);
 
-		float cosGamma = saturate(dot(viewDir, projNormal) * inversesqrt(dot(projNormal, projNormal)));
-		float gamma = sign(dot(tangent, projNormal)) * acos(cosGamma);
+            float cosGamma = saturate(dot(viewDir, projNormal) * inversesqrt(dot(projNormal, projNormal)));
+            float gamma = sign(dot(tangent, projNormal)) * acos(cosGamma);
 
-        vec2 horizonAngles = vec2(
-            getMaxHorizonAngle(-sliceDir.xy, screenPos.xy, viewPos, viewDir, stepSize, dither.y),
-            getMaxHorizonAngle( sliceDir.xy, screenPos.xy, viewPos, viewDir, stepSize, dither.y)
-        );
+            vec2 horizonAngles = vec2(
+                getMaxHorizonAngle(-sliceDir.xy, screenPos.xy, viewPos, viewDir, stepSize, dither.y),
+                getMaxHorizonAngle( sliceDir.xy, screenPos.xy, viewPos, viewDir, stepSize, dither.y)
+            );
 
-        horizonAngles = gamma + clamp(vec2(-1.0, 1.0) * horizonAngles - gamma, -HALF_PI, HALF_PI);
+            horizonAngles = gamma + clamp(vec2(-horizonAngles.x, horizonAngles.y) - gamma, -HALF_PI, HALF_PI);
 
-        float bentAngle = 0.5 * (horizonAngles.x + horizonAngles.y);
+            float bentAngle = 0.5 * (horizonAngles.x + horizonAngles.y);
 
-        integratedData.xyz += projNormal * cos(bentAngle) + tangent * sin(bentAngle);
-        integratedData.w   += dot(vec2(0.25), cosGamma + 2.0 * horizonAngles * sin(gamma) - cos(2.0 * horizonAngles - gamma));
-    }
+            integratedData.xyz += viewDir * cos(bentAngle) + tangent * sin(bentAngle);
+            integratedData.w   += dot(vec2(0.25), cosGamma + 2.0 * horizonAngles * sin(gamma) - cos(2.0 * horizonAngles - gamma));
+        }
 
-    const float aoIntensity = 0.8;
-
-    return vec4(normalize(mat3(gbufferModelViewInverse) * integratedData.xyz), mix(1.0, integratedData.w * rcp(float(GTAO_SLICES)), aoIntensity));
+        return vec4(normalize(mat3(gbufferModelViewInverse) * (normalize(integratedData.xyz) - 0.5 * viewDir + 0.2 * viewNormal)), integratedData.w * rcp(float(GTAO_SLICES)));
+    #else
+        return vec4(mat3(gbufferModelViewInverse) * viewNormal, 1.0);
+    #endif
 }
 
 vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither) {
-    vec3 shadowViewNormal = mat3(shadowModelView) * bentNormal;
-    vec2 shadowClipPos = shadowProjScale.xy * shadowViewPos.xy;
+    #if SUNLIGHT_GI_SAMPLES > 0
+        vec3 shadowViewNormal = mat3(shadowModelView) * bentNormal;
+        vec2 shadowClipPos = shadowProjScale.xy * shadowViewPos.xy;
 
-    vec2 sampleState = shadowProjScale.x * SUNLIGHT_GI_RANGE * vec2(cos(dither.x * TWO_PI), sin(dither.x * TWO_PI));
-    vec3 integratedData = vec3(0.0);
+        vec2 sampleState = shadowProjScale.x * SUNLIGHT_GI_RANGE * vec2(cos(dither.x * TWO_PI), sin(dither.x * TWO_PI));
+        vec3 integratedData = vec3(0.0);
 
-    for (int i = 0; i < SUNLIGHT_GI_SAMPLES; i++) {
-        float sampleDist = fract(0.4301597 * i + dither.y);
-        sampleState *= vogelPhase;
+        for (int i = 0; i < SUNLIGHT_GI_SAMPLES; i++) {
+            float sampleDist = fract(0.4301597 * i + dither.y);
+            sampleState *= vogelPhase;
 
-        vec2 sampleClipPos = shadowClipPos + sampleDist * sampleState;
-        ivec2 sampleTexel = ivec2(float(shadowMapResolution) * (distortShadowPos(sampleClipPos) * 0.5 + 0.5));
+            vec2 sampleClipPos = shadowClipPos + sampleDist * sampleState;
+            ivec2 sampleTexel = ivec2(float(shadowMapResolution) * (distortShadowPos(sampleClipPos) * 0.5 + 0.5));
 
-        vec3 sampleViewVec = shadowProjScaleInv * vec3(sampleClipPos, texelFetch(shadowtex1, sampleTexel, 0).r * 2.0 - 1.0) - shadowViewPos;
+            vec3 sampleViewVec = shadowProjScaleInv * vec3(sampleClipPos, texelFetch(shadowtex1, sampleTexel, 0).r * 2.0 - 1.0) - shadowViewPos;
 
-        float sqrLength = dot(sampleViewVec, sampleViewVec);
-        float invLength = inversesqrt(max(0.01, sqrLength));
+            float sqrLength = dot(sampleViewVec, sampleViewVec);
+            float invLength = inversesqrt(max(0.01, sqrLength));
 
-        if (invLength > rcp(SUNLIGHT_GI_RANGE)) {
-            vec3 radiance =  sampleDist * texelFetch(shadowcolor0, sampleTexel, 0).rgb;
-                 radiance *= smoothstep(-SUNLIGHT_GI_RANGE, -0.75 * SUNLIGHT_GI_RANGE, -sqrLength * invLength);
-                 radiance *= max0(dot(shadowViewNormal, sampleViewVec));
-                 radiance *= max0(-dot(octDecode(texelFetch(shadowcolor1, sampleTexel, 0).rg), sampleViewVec));
-                 radiance *= sqr(invLength * invLength);
+            if (invLength > rcp(SUNLIGHT_GI_RANGE)) {
+                vec3 radiance =  sampleDist * texelFetch(shadowcolor0, sampleTexel, 0).rgb;
+                    radiance *= smoothstep(-SUNLIGHT_GI_RANGE, -0.75 * SUNLIGHT_GI_RANGE, -sqrLength * invLength);
+                    radiance *= max0(dot(shadowViewNormal, sampleViewVec));
+                    radiance *= max0(-dot(octDecode(texelFetch(shadowcolor1, sampleTexel, 0).rg), sampleViewVec));
+                    radiance *= sqr(invLength * invLength);
 
-            integratedData += radiance;
+                integratedData += radiance;
+            }
         }
-    }
 
-    return 2.0 * SUNLIGHT_GI_RANGE * SUNLIGHT_GI_RANGE * rcp(SUNLIGHT_GI_SAMPLES) * integratedData;
+        return 2.0 * SUNLIGHT_GI_RANGE * SUNLIGHT_GI_RANGE * rcp(SUNLIGHT_GI_SAMPLES) * integratedData;
+    #else
+        return vec3(0.0);
+    #endif
 }
 
 vec3 getFakeBouncedSunlight (vec3 bentNormal) {
-    const vec3 albedo = vec3(0.005) * rgbToAp1Unlit;
+    const vec3 albedo = vec3(0.015) * rgbToAp1Unlit;
     
-    return albedo * (saturate(0.5 - bentNormal.x * shadowDir.x) + saturate(0.5 - bentNormal.y * shadowDir.y) + saturate(0.5 - bentNormal.z * shadowDir.z));
+    return albedo * (saturate(0.5 - bentNormal.x * shadowDir.x) + saturate(0.5 - bentNormal.z * shadowDir.z));
 }
 
 vec3 getSpecularReflections (vec3 screenPos, vec3 playerPos, vec3 reflectedDir, float dither, float skylight) {
@@ -146,7 +153,7 @@ vec3 getSceneLighting (
         float blockerDepth = getBlockerDepth(shadowViewPos, dither);
     #endif
 
-    vec3 transmittance = shadowLightBrightness * vec3(1.0, 0.94, 0.85) * getTransmittance(shadowDir);
+    vec3 transmittance = shadowLightBrightness * SUNLIGHT_TINT * getTransmittance(shadowDir);
 
     vec3 radiance = mat.albedo * (mat.emission + ao * (indirectIrradiance + getBlocklight(playerPos + textureNormal * 0.5)));
 

@@ -5,7 +5,7 @@
     const float shadowDistance = 192.0; // [32.0 48.0 64.0 80.0 96.0 112.0 128.0 144.0 160.0 176.0 192.0 208.0 224.0 240.0 256.0]
     const float shadowDepthDist = 256.0;
 
-    const float sunPathRotation = -50.0; // [-50.0 -45.0 -40.0 -35.0 -30.0 -25.0 -20.0 -15.0 -10.0 -5.0 0.0 5.0 10.0 15.0 20.0 25.0 30.0 35.0 40.0 45.0 50.0]
+    const float sunPathRotation = -40.0; // [-45.0 -40.0 -35.0 -30.0 -25.0 -20.0 -15.0 -10.0 -5.0 0.0 5.0 10.0 15.0 20.0 25.0 30.0 35.0 40.0 45.0]
 
     #define COLORED_LIGHTING
     #define VOXELIZATION_DISTANCE 64 // [64 128 192 256]
@@ -19,7 +19,6 @@
     #define ADAPTATION_SPEED 0.03
     #define MANUAL_EXPOSURE 10.0
 
-    #define SHADOW_DISTORTION 0.95
     #define SHADOW_BIAS 0.03
 
     #define SHADOW_MAX_BLOCKER_DEPTH 40.0
@@ -30,30 +29,31 @@
     #define SHADOW_SMOOTHING 2.5
 
     #define SS_REFLECTIONS
-    #define SSR_PRIMARY_STEP_COUNT 16
-    #define SSR_REFINEMENT_STEP_COUNT 8
+    #define SSR_PRIMARY_STEP_COUNT 8
+    #define SSR_REFINEMENT_STEP_COUNT 5
 
-    #define SUNLIGHT_TINT_R 1.00
-    #define SUNLIGHT_TINT_G 0.94
-    #define SUNLIGHT_TINT_B 0.85
+    #define SUNLIGHT_TINT_R 0.60
+    #define SUNLIGHT_TINT_G 0.60
+    #define SUNLIGHT_TINT_B 0.60
 
-    #define SKYLIGHT_TINT_R 1.00
-    #define SKYLIGHT_TINT_G 1.12
-    #define SKYLIGHT_TINT_B 0.96
+    #define SKYLIGHT_TINT_R 0.50
+    #define SKYLIGHT_TINT_G 0.52
+    #define SKYLIGHT_TINT_B 0.60
 
     #define SUNLIGHT_TINT vec3(SUNLIGHT_TINT_R, SUNLIGHT_TINT_G, SUNLIGHT_TINT_B)
     #define SKYLIGHT_TINT vec3(SKYLIGHT_TINT_R, SKYLIGHT_TINT_G, SKYLIGHT_TINT_B)
 
-    #define NIGHT_BRIGHTNESS 0.005 // [0.001 0.002 0.003 0.004 0.005 0.006 0.007 0.008 0.009 0.010]
+    #define NIGHT_BRIGHTNESS 0.015 // [0.001 0.002 0.003 0.004 0.005 0.006 0.007 0.008 0.009 0.010]
 
     #define INDIRECT_LIGHTING
-    #define INDIRECT_TEMPORAL_BLEND_WEIGHT 0.0625
+    #define INDIRECT_RENDER_SCALE 70
+    #define INDIRECT_TEMPORAL_BLEND_WEIGHT 0.03
 
     #define GTAO_RADIUS 0.5
     #define GTAO_SLICES 1
-    #define GTAO_HORIZON_STEPS 6
+    #define GTAO_HORIZON_STEPS 4
 
-    #define SUNLIGHT_GI_SAMPLES 16
+    #define SUNLIGHT_GI_SAMPLES 8
     #define SUNLIGHT_GI_RANGE 4.0
 
     #define SSS_ENABLED
@@ -63,7 +63,7 @@
     #define tonemap acesFilmic // [agx lottes neutral acesFilmic reinhard2 exponential tonemap_none tonyMcMapface]
 
     #define TAA
-    #define TEMPORAL_UPSAMPLING 100 // [25 33 50 66 75 83 100]
+    #define TEMPORAL_UPSAMPLING 1 // [1 2 3 4]
 
     #define TAA_TEMPORAL_W_CLAMP 8.0
     #define TAA_JITTER_SCALE 1.0 // [0.0 1.0]
@@ -80,6 +80,9 @@
     #endif
 
     #ifdef COLORED_LIGHTING
+    #endif
+
+    #ifdef INDIRECT_LIGHTING
     #endif
 
 #endif
