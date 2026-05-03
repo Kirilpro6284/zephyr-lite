@@ -11,9 +11,7 @@ const bool shadowcolor1Nearest = true;
 
 const bool shadowHardwareFiltering = true;
 
-#ifdef COLORED_LIGHTING
-    const float voxelDistance = 32.0;
-#endif
+const float voxelDistance = 32.0;
 
 /*  
     const int colortex1Format = RGBA16F; // translucent objects (translucent -> composite), average luminance (composite -> temporal)
@@ -24,9 +22,10 @@ const bool shadowHardwareFiltering = true;
     const int colortex8Format = RG32UI; // gbuffer data 0: albedo (8:8:8), blockId (8), geoNormal (8:8), lightLevels (8:8) (solid -> deferred)
     const int colortex9Format = RG32UI; // gbuffer data 1: textureNormal (16:16), specularMap (8:8:8:8) (solid -> deferred)
     const int colortex10Format = RGBA8; // sun & moon geometry (skytextured -> deferred), post-processing data (temporal -> post)
+    const int colortex11Format = R32F; // reversed-z depth buffer
     const int colortex12Format = R32F; // previous frame depth buffer
 
-    const bool colortex1Clear = true;
+    const bool colortex1Clear = false;
     const bool colortex3Clear = false;
     const bool colortex6Clear = false;
     const bool colortex7Clear = true;
@@ -36,23 +35,20 @@ const bool shadowHardwareFiltering = true;
     const bool colortex11Clear = true;
     const bool colortex12Clear = false;
 
-    const vec4 colortex1ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
-    const vec4 colortex7ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
+    const vec4 colortex7ClearColor  = vec4(0.0, 0.0, 0.0, 0.0);
+    const vec4 colortex10ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
     const vec4 colortex11ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 
     const int shadowcolor0Format = RGBA8;
-    const int shadowcolor1Format = RG8;
 */
 
-#define DEPTH_BUFFER_PRECISION 1 // [0 1]
-
-#if DEPTH_BUFFER_PRECISION == 1
+#ifdef SUNLIGHT_GI_LEAK_FIX
     /*
-        const int colortex11Format = R32F; // reversed-z depth buffer
+        const int shadowcolor1Format = RGB8;
     */
 #else
     /*
-        const int colortex11Format = R16F; // reversed-z depth buffer
+        const int shadowcolor1Format = RG8;
     */
 #endif
 

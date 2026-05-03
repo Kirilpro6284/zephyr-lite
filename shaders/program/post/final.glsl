@@ -1,7 +1,5 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
-#include "/include/constants.glsl"
 #include "/include/main.glsl"
+#include "/include/constants.glsl"
 #include "/include/post/tonemapping.glsl"
 #include "/include/utility/packing.glsl"
 #include "/include/text/text.glsl"
@@ -26,8 +24,6 @@ void main ()
     #endif
 
     color.rgb = pow(tonemap(color.rgb * exposure) * ap1ToRgb, vec3(1.0 / 2.2)) + getBlueNoise(gl_FragCoord.xy) * rcp(255.0) - rcp(510.0);
-
-    //color.rgb = 15.0 * getSkyIrradiance(screenToPlayerPos(internalTexelSize * gl_FragCoord.xy, -0.5));
  
     #ifdef ENABLE_TEXT_RENDERING
         #define FONT_SIZE 2 // [1 2 3 4 5 6 7 8]

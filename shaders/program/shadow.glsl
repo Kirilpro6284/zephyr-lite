@@ -1,5 +1,3 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/lighting/shadowMapping.glsl"
 #include "/include/lighting/floodfill.glsl"
@@ -8,6 +6,11 @@ uniform float alphaTestRef = 0.1;
 
 #ifdef fsh
 
+#ifdef SUNLIGHT_GI_LEAK_FIX
+    in float skylight;
+#else
+    const float skylight = 0.0;
+#endif
 in vec2 texcoord;
 in vec3 vertexColor;
 in vec3 vertexNormal;
@@ -24,7 +27,7 @@ void main () {
     if (renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT && albedo.a > 0.99) albedo.a = 0.99;
 
     shadowcolor0Out = gl_FrontFacing ? albedo : vec4(0.0, 0.0, 0.0, 1.0);
-    shadowcolor1Out = vec4(octEncode(vertexNormal), 0.0, float(renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT));
+    shadowcolor1Out = vec4(octEncode(vertexNormal), skylight, float(renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT));
 
     if (renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT && albedo.a < alphaTestRef) discard;
 }
@@ -36,6 +39,9 @@ void main () {
 attribute vec4 at_midBlock;
 attribute vec2 mc_Entity;
 
+#ifdef SUNLIGHT_GI_LEAK_FIX
+    out float skylight;
+#endif
 out vec2 texcoord;
 out vec3 vertexColor;
 out vec3 vertexNormal;
@@ -47,6 +53,9 @@ void main () {
 
     gl_Position.xy = distortShadowPos(gl_Position.xy);
 
+#ifdef SUNLIGHT_GI_LEAK_FIX
+    skylight = (mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1).g;
+#endif
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     vertexColor = gl_Color.rgb;
     vertexNormal = gl_NormalMatrix * gl_Normal;

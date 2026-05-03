@@ -1,17 +1,19 @@
 {
   "unusedString":
     "
-        #include "/include/config.glsl"
         #include "/include/main.glsl"
     ",
   "version": 1,
   "uniforms": [
     "taa_offset",
     "internalScreenSize",
-    "lodProjMat_2",
-    "lodProjMat_3",
+    "frameCounter",
+    "lodProjMatInv_3",
     "lodProjMatInv_2",
     "lodProjMatInv_3",
+    "lodProjMat_2",
+    "lodProjMat_3",
+    "lodProjMat_2",
     "vxProjInv"
   ],
   "taaOffset": "{return taa_offset;}",

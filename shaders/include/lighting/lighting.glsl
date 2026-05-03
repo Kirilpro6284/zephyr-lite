@@ -1,6 +1,7 @@
 #if !defined INCLUDE_LIGHTING
 #define INCLUDE_LIGHTING
 
+#include "/include/lighting/shadowMapping.glsl"
 #include "/include/lighting/floodfill.glsl"
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/raymarching.glsl"
@@ -30,7 +31,7 @@ float getMaxHorizonAngle (vec2 sliceDir, vec2 screenPos, vec3 viewPos, vec3 view
         float lengthSqu = dot(sampleVec, sampleVec);
 
         float cosTheta = dot(sampleVec, viewDir) * inversesqrt(lengthSqu);
-              cosTheta = mix(cosTheta, -1.0, saturate(lengthSqu - 3.0 * GTAO_RADIUS));
+              cosTheta = mix(cosTheta, -1.0, clamp01(lengthSqu - 3.0 * GTAO_RADIUS));
 
         maxTheta = max(maxTheta, cosTheta);
     }
@@ -54,7 +55,7 @@ vec4 getAmbientOcclusion (vec3 screenPos, vec3 viewPos, vec3 viewNormal, vec2 di
             vec3 axis = cross(sliceDir, viewDir);
             vec3 projNormal = viewNormal - axis * dot(viewNormal, axis);
 
-            float cosGamma = saturate(dot(viewDir, projNormal) * inversesqrt(dot(projNormal, projNormal)));
+            float cosGamma = clamp01(dot(viewDir, projNormal) * inversesqrt(dot(projNormal, projNormal)));
             float gamma = sign(dot(tangent, projNormal)) * acos(cosGamma);
 
             vec2 horizonAngles = vec2(
@@ -76,7 +77,7 @@ vec4 getAmbientOcclusion (vec3 screenPos, vec3 viewPos, vec3 viewNormal, vec2 di
     #endif
 }
 
-vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither) {
+vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither, float skylight) {
     #if SUNLIGHT_GI_SAMPLES > 0
         vec3 shadowViewNormal = mat3(shadowModelView) * bentNormal;
         vec2 shadowClipPos = shadowProjScale.xy * shadowViewPos.xy;
@@ -99,12 +100,17 @@ vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither) {
             float invLength = inversesqrt(max(0.01, sqrLength));
 
             if (invLength > rcp(SUNLIGHT_GI_RANGE)) {
-                vec4 albedo = texelFetch(shadowcolor0, sampleTexel, 0);
-                vec3 radiance =  sampleDist * albedo.rgb * (1.0 - albedo.a * step(albedo.a, 0.99));
+                vec4 data0 = texelFetch(shadowcolor0, sampleTexel, 0);
+                vec3 data1 = texelFetch(shadowcolor1, sampleTexel, 0).rgb;
+
+                vec3 radiance =  sampleDist * data0.rgb * (1.0 - data0.a * step(data0.a, 0.99));
                      radiance *= smoothstep(-SUNLIGHT_GI_RANGE, -0.75 * SUNLIGHT_GI_RANGE, -sqrLength * invLength);
                      radiance *= max0(dot(shadowViewNormal, sampleViewVec));
-                     radiance *= max0(-dot(octDecode(texelFetch(shadowcolor1, sampleTexel, 0).rg), sampleViewVec));
+                     radiance *= max0(-dot(octDecode(data1.rg), sampleViewVec));
                      radiance *= sqr(invLength * invLength);
+                #ifdef SUNLIGHT_GI_LEAK_FIX
+                     radiance *= exp(-6.0 * abs(data1.b - skylight));
+                #endif
 
                 integratedData += radiance;
             }
@@ -119,7 +125,7 @@ vec3 getBouncedSunlight (vec3 shadowViewPos, vec3 bentNormal, vec2 dither) {
 vec3 getFakeBouncedSunlight (vec3 bentNormal) {
     const vec3 albedo = vec3(0.015) * rgbToAp1Unlit;
     
-    return albedo * (saturate(0.5 - bentNormal.x * shadowDir.x) + saturate(0.5 - bentNormal.z * shadowDir.z));
+    return albedo * (clamp01(0.5 - bentNormal.x * shadowDir.x) + clamp01(0.5 - bentNormal.z * shadowDir.z));
 }
 
 vec3 getSpecularReflections (vec3 screenPos, vec3 playerPos, vec3 reflectedDir, float dither, float skylight) {
@@ -134,7 +140,7 @@ vec3 getSpecularReflections (vec3 screenPos, vec3 playerPos, vec3 reflectedDir, 
 
 vec2 adjustLightLevels (vec2 lightLevels) {
     lightLevels.y = 1.0 - pow(1.0 - lightLevels.y, 1.5);
-    lightLevels.y = pow(lightLevels.y, 5.0);
+    lightLevels.y = pow(lightLevels.y, 6.0);
 
     return lightLevels;
 }

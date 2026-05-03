@@ -40,7 +40,7 @@
 
     float getBlockerDepth (vec3 shadowViewPos, float dither) {
         float blockerDepth = 0.0;
-
+        
         vec2 state = vec2(cos(dither * TWO_PI), sin(dither * TWO_PI));
 
         for (int i = 0; i < SHADOW_BLOCKER_SAMPLES; i++) 
@@ -87,7 +87,7 @@
             integratedData.w += texture(shadowtex1HW, vec3(shadowDistortPos.xy + distortDiff * sampleDist * sampleState, shadowDistortPos.z)).r;
         }
 
-        integratedData.w = saturate(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), clamp(SHADOW_SMOOTHING * biasAmount / penumbraSize, 1.0, 1.0 + SHADOW_SMOOTHING)));
+        integratedData.w = clamp01(mix(0.5, integratedData.w * rcp(float(SHADOW_SAMPLES)), clamp(SHADOW_SMOOTHING * biasAmount / penumbraSize, 1.0, 1.0 + SHADOW_SMOOTHING)));
 
         float shadowGradient = smoothstep(-1.0, -0.99, -abs(shadowPos.x))
                              * smoothstep(-1.0, -0.99, -abs(shadowPos.y));

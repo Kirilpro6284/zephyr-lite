@@ -1,12 +1,13 @@
 #if !defined INCLUDE_MAIN
 #define INCLUDE_MAIN
 
-#define rcp(x) (1.0 / (x))
+#include "/include/uniforms.glsl"
+#include "/include/config.glsl"
 
 #define rcp(x)       (1.0 / (x))
 #define max0(x)      max(x, 0.0)
 #define min1(x)      min(x, 1.0)
-#define saturate(x)  clamp(x, 0.0, 1.0)
+#define clamp01(x)   clamp(x, 0.0, 1.0)
 #define HALF_PI      1.57079632
 #define PI           3.14159265
 #define TWO_PI       6.28318530
@@ -16,16 +17,17 @@
 #define hermite(x)   smoothstep(0.0, 1.0, x)
 
 #if TEMPORAL_UPSAMPLING == 1
-    const float taauRenderScale = 1.0;
+    #define taauRenderScale 1.0
 #elif TEMPORAL_UPSAMPLING == 2
-    const float taauRenderScale = 0.7071;
+    #define taauRenderScale 0.7071
 #elif TEMPORAL_UPSAMPLING == 3
-    const float taauRenderScale = 0.5773;
+    #define taauRenderScale 0.5773
 #elif TEMPORAL_UPSAMPLING == 4
-    const float taauRenderScale = 0.5;
+    #define taauRenderScale 0.5
 #endif
 
 const float indirectRenderScale = 0.01 * INDIRECT_RENDER_SCALE;
+const float airFogRenderScale   = 0.01 * AIR_FOG_RENDER_SCALE;
 
 const mat2 vogelPhase = mat2(cos(0.2451223 * TWO_PI), -sin(0.2451223 * TWO_PI), sin(0.2451223 * TWO_PI), cos(0.2451223 * TWO_PI));
 
@@ -144,7 +146,7 @@ mat3 tbnNormal (vec3 normal) {
     return tbnNormalTangent(normal, vec4(normalize(cross(normal, abs(normal.y) > abs(normal.z) ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0))), 1.0));
 }
     
-#ifndef STAGE_VOXY_OPAQUE 
+#ifndef STAGE_VOXY
     uvec4 getMaterialData (ivec2 texel) {
         return uvec4(
             texelFetch(colortex8, texel, 0).rg,

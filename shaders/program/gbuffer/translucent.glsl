@@ -1,5 +1,3 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
 #include "/include/sky/atmosphere.glsl"
@@ -67,8 +65,18 @@ void main ()
         1.0
     );
 
-    fragColor.rgb = mix(fragColor.rgb, getSpecularReflections(screenPos, playerPos, reflectedDir, dither, lightLevels.y), getSchlickFresnel(vec3(0.4), dot(reflectedDir, vertexNormal)));
-    fragColor.a = albedo.a;
+    float fresnel = getSchlickFresnel(0.2, dot(reflectedDir, vertexNormal));
+
+    fragColor.a = mix(albedo.a, 1.0, fresnel);
+    fragColor.rgb *= fragColor.a * (1.0 - fresnel);
+
+    fragColor.rgb += fresnel * getSpecularReflections(
+        screenPos, 
+        playerPos, 
+        reflectedDir, 
+        dither, 
+        lightLevels.y
+    );
 
     if (albedo.a < alphaTestRef) discard;
 }

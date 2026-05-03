@@ -1,5 +1,3 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
@@ -10,12 +8,14 @@
 #include "/include/lighting/lighting.glsl"
 #include "/include/surface/material.glsl"
 
-/* RENDERTARGETS: 7 */
-layout (location = 0) out vec4 color;
+/* RENDERTARGETS: 1,7 */
+layout (location = 0) out vec4 colortex1Out;
+layout (location = 1) out vec4 color;
 
 void main () {
     ivec2 texel = ivec2(gl_FragCoord.xy);
 
+    colortex1Out = vec4(0.0);
     color.a = 1.0;
 
     uvec4 materialData = getMaterialData(texel);
@@ -58,7 +58,7 @@ void main () {
             float sampleDepth = rcp(texelFetch(colortex12, sampleTexel + offset, 0).r);
             float sampleWeight = bilinearWeight(coord, vec2(offset)) * max(0.001, exp(-20.0 * abs(sampleDepth + viewPos.z)));
 
-            indirectIrradiance += sampleWeight * texelFetch(colortex3, sampleTexel + offset, 0);
+            indirectIrradiance += sampleWeight * texelFetch(colortex1, sampleTexel + offset, 0);
             weights += sampleWeight;
         }
 

@@ -61,12 +61,12 @@
 
     vec3 getDensityAtHeight (float height) 
     {
-        return vec3(exp((planetRadius - height) * invScaleHeights), max0(min((height - planetRadius - 15000.0) / 10000.0, (40000.0 + planetRadius - height) / 15000.0)));
+        return vec3(exp(-height * invScaleHeights), max0(min((height - 15000.0) / 10000.0, (40000.0 - height) / 15000.0)));
     }
 
     vec3 getDensityAtPoint (vec3 pos)
     {
-        return getDensityAtHeight(length(pos));
+        return getDensityAtHeight(length(pos) - planetRadius);
     }
 
 #ifndef STAGE_SETUP
@@ -84,7 +84,7 @@
 
         if (uv.y < 0.0) return vec3(0.0);
 
-        uv = rcp(256.0) * mix(vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT + SKY_TRANSMITTANCE_RES) - 0.5, saturate(uv));
+        uv = rcp(256.0) * mix(vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT) + 0.5, vec2(SKY_TRANSMITTANCE_BOTTOM_LEFT + SKY_TRANSMITTANCE_RES) - 0.5, clamp01(uv));
 
         return textureRgbe8(scattering, uv, vec2(256.0));
     }
@@ -96,12 +96,12 @@
 
     vec3 getMultipleScattering (vec3 rayPos, vec3 lightDir, float rayHeight)
     {
-        vec2 uv = vec2(rcp(atmosphereHeight) * (rayHeight - planetRadius), dot(rayPos, lightDir) * inversesqrt(dot(rayPos, rayPos)) * 0.5 + 0.5);
+        vec2 uv = vec2(rcp(atmosphereHeight) * rayHeight, dot(rayPos, lightDir) * inversesqrt(dot(rayPos, rayPos)) * 0.5 + 0.5);
 
         uv.x = liftInv(uv.x, -2.0);
         uv.y = liftInv(uv.y * 2.0 - 1.0, -1.5) * 0.5 + 0.5;
 
-        uv = rcp(256.0) * mix(vec2(SKY_MS_BOTTOM_LEFT) + 0.5, vec2(SKY_MS_BOTTOM_LEFT + SKY_MS_RES) - 0.5, saturate(uv));
+        uv = rcp(256.0) * mix(vec2(SKY_MS_BOTTOM_LEFT) + 0.5, vec2(SKY_MS_BOTTOM_LEFT + SKY_MS_RES) - 0.5, clamp01(uv));
 
         return textureRgbe8(scattering, uv, vec2(256.0));
     }
@@ -116,7 +116,7 @@
 
         uv.x = w > 0.0001 ? -liftInv(asin(clamp(inversesqrt(w) * dot(sunDir.xz, rayDir.xz), -1.0, 1.0)) * rcp(HALF_PI), 0.5) * 0.5 + 0.5 : 0.0;
 
-        uv = rcp(256.0) * mix(vec2(SKY_VIEW_BOTTOM_LEFT) + 0.5, vec2(SKY_VIEW_BOTTOM_LEFT + SKY_VIEW_RES) - 0.5, saturate(uv));
+        uv = rcp(256.0) * mix(vec2(SKY_VIEW_BOTTOM_LEFT) + 0.5, vec2(SKY_VIEW_BOTTOM_LEFT + SKY_VIEW_RES) - 0.5, clamp01(uv));
 
         return textureRgbe8(scattering, uv, vec2(256.0));
     }
@@ -140,7 +140,7 @@
         vec3 rayStep = rayDir * stepSize;
         vec3 rayPos = rayOrigin + rayStep * 0.5;
 
-        vec3 opticalDepth = vec3(0.0);
+        vec3 transmittance = vec3(1.0);
         vec3 integratedData = vec3(0.0);
         
         #ifdef USE_KLEIN_NISHINA_PHASE
@@ -150,12 +150,12 @@
         #endif
 
         for (int i = 0; i < SCATTER_POINTS; i++, rayPos += rayStep) {
-            float rayHeight = length(rayPos);
+            float rayHeight = length(rayPos) - planetRadius;
 
             vec3 density = stepSize * getDensityAtHeight(rayHeight);
-            opticalDepth += -min1(float(i) + 0.5) * (betaR * density.x + betaM * density.y + betaO * density.z);
+            transmittance *= exp(-min1(float(i) + 0.5) * (betaR * density.x + betaM * density.y + betaO * density.z));
 
-            integratedData += exp(opticalDepth) * (
+            integratedData += transmittance * (
                 getAtmosphereTransmittance(rayPos, lightDir) * (betaR * phase.x * density.x + betaM * phase.y * density.y) 
               + getMultipleScattering(rayPos, lightDir, rayHeight) * (betaR * isotropicPhase.x * density.x + betaM * isotropicPhase.y * density.y)
             );

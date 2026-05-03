@@ -4,7 +4,7 @@
     #include "/include/utility/textureSampling.glsl"
     #include "/include/utility/colorMatrices.glsl"
 
-    const float blocklightFill = 0.95;
+    const float blocklightFill = 1.0;
     const float centerWeight = 0.2;
 
     const vec3[16] tintColors = vec3[16] (

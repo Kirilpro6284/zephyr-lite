@@ -1,5 +1,3 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
 #include "/include/utility/colorMatrices.glsl"
@@ -34,7 +32,12 @@ void main ()
     #endif
 
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
+
+#ifdef HARDCODED_SPECULAR
     vec4 specularData = getHardcodedSpecular(albedo.rgb, geometryId);
+#else
+    vec4 specularData = texture(specular, texcoord);
+#endif
 
     mat3 tbnMatrix = tbnNormalTangent(vertexNormal, vertexTangent);
 
@@ -90,6 +93,7 @@ void main ()
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
     vertexNormal = normalize(vertexNormal * step(vec3(0.01), abs(vertexNormal)));
     vertexTangent = vec4(mat3(gbufferModelViewInverse) * mat3(gl_ModelViewMatrix) * at_tangent.xyz, at_tangent.w);
+    vertexTangent.xyz = normalize(vertexTangent.xyz * step(vec3(0.025), abs(vertexTangent.xyz)));
 
     reversedDepth = (lodProjMat_2.z * viewPos.z + lodProjMat_3.z) / (lodProjMat_2.w * viewPos.z);
     geometryId = uint(mc_Entity.x) - 10000u;

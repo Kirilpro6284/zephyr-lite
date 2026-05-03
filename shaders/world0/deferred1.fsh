@@ -1,3 +1,5 @@
 #version 430 compatibility
 
-#include "/program/deferred/deferredShading.glsl"
+#define FILTER_PASS 0
+
+#include "/program/deferred/spatialFilter.glsl"

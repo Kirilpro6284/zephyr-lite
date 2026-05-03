@@ -1,28 +1,27 @@
 #if !defined INCLUDE_BSDF
 #define INCLUDE_BSDF
 
-float rayleighPhase (float cosTheta)
-{
+float rayleighPhase (float cosTheta){
     return (1.0 + cosTheta * cosTheta) * 3.0 / (16.0 * PI);
 }
 
-float schlickPhase (float cosTheta, float k)
-{
+float schlickPhase (float cosTheta, float k){
     return (1.0 - k * k) / (4.0 * PI * sqr(1.0 - k * cosTheta));
 }
 
-float kleinNishinaPhase (float cosTheta, float e) 
-{
+float kleinNishinaPhase (float cosTheta, float e) {
     return e / (TWO_PI * (e * (1.0 - cosTheta) + 1.0) * log(e * 2.0 + 1.0));
 }
 
-vec3 getSchlickFresnel (vec3 F0, float theta)
-{  
-    return F0 + (1.0 - F0) * pow(1.0 - theta, 5.0);
+vec3 getSchlickFresnel (vec3 f0, float theta) {  
+    return f0 + (1.0 - f0) * pow(1.0 - theta, 5.0);
 }
 
-float ggx (float NdotH, float NdotV, float NdotL, float roughness)
-{   
+float getSchlickFresnel (float f0, float theta) {
+    return f0 + (1.0 - f0) * pow(1.0 - theta, 5.0);
+}
+
+float ggx (float NdotH, float NdotV, float NdotL, float roughness) {   
     float alpha = sqr(roughness);
     float alpha2 = sqr(alpha);
 

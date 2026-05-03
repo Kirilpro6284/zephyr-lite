@@ -1,6 +1,7 @@
-#ifndef INCLUDE_UNIFORMS
-    #define INCLUDE_UNIFORMS
+#if !defined INCLUDE_UNIFORMS
+#define INCLUDE_UNIFORMS
 
+#ifndef STAGE_VOXY
     layout (r8ui) uniform uimage3D voxelBuffer;
     layout (rgba8) uniform image3D lightBuffer;
     layout (rgba8) uniform image2D imgScattering;
@@ -108,6 +109,9 @@
     uniform float eyeAltitude;
     uniform float aspectRatio;
     uniform float near;
+    uniform float far;
+
+    uniform ivec2 eyeBrightnessSmooth;
 
     uniform ivec3 previousCameraPositionInt;
     uniform ivec3 cameraPositionInt;
@@ -122,5 +126,6 @@
     uniform bool hideGUI;
 
     #define lodDepthTex1 colortex11
-
 #endif
+
+#endif // INCLUDE_UNIFORMS

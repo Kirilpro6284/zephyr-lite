@@ -1,4 +1,3 @@
-#include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/packing.glsl"
 

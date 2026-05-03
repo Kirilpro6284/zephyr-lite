@@ -1,6 +1,3 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
-#include "/include/constants.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/textureSampling.glsl"
 

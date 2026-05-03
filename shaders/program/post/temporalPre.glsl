@@ -1,5 +1,3 @@
-#include "/include/uniforms.glsl"
-#include "/include/config.glsl"
 #include "/include/main.glsl"
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/textureSampling.glsl"
