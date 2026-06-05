@@ -20,7 +20,7 @@ const float maxRayLength = 7500.0;
 float getCloudVolumeDensity(vec3 worldPos) {
     float density = texture(noisetex0, fract((worldPos.xz + worldAge * windDirection0) * 0.00002)).b - (1.0 - coverage);
 
-    if (density < 0.0) return 0.0;
+    if (density < 0.0) return density;
 
     float height = length(worldPos) - planetRadius;
 
@@ -34,7 +34,7 @@ float getCloudVolumeDensity(vec3 worldPos) {
     density += 0.16 * (texture(noisetex1, fract(worldPos * 0.0008)).r - 1.0);
     density += 0.064 * (texture(noisetex1, fract(worldPos * 0.008)).r - 1.0);
 
-    return clamp01(0.25 * density);
+    return 0.25 * density;
 }
 
 float getCloudVolumeTransmittance(vec3 rayPos, vec3 lightDir, float dither) {
@@ -49,7 +49,7 @@ float getCloudVolumeTransmittance(vec3 rayPos, vec3 lightDir, float dither) {
     float opticalDepth = 0.0;
 
     for (int i = 0; i < CLOUDS_LIGHT_SCATTER_POINTS; i++, rayPos += lightDir) {
-        opticalDepth += stepSize * getCloudVolumeDensity(rayPos);
+        opticalDepth += stepSize * clamp01(getCloudVolumeDensity(rayPos));
     }
 
     return exp(-opticalDepth) + 0.2 * exp(-0.2 * opticalDepth);
@@ -103,8 +103,6 @@ vec4 raymarchCloudVolume(vec3 scenePos, vec3 rayDir, float terrainDist, float di
     float distance = 0.0;
     float weights = 0.0;
 
-    // Primary loop
-
     for (int i = 0; i < CLOUDS_VIEW_SCATTER_POINTS; i++, rayPos += rayDir) {
         vec3 offsetPos = rayPos + vec3(0.0, planetRadius + eyeAltitude * rcp(CLOUDS_SCALE), 0.0);
 
@@ -114,11 +112,6 @@ vec4 raymarchCloudVolume(vec3 scenePos, vec3 rayDir, float terrainDist, float di
 
         float stepTransmittance = scattering.b * exp(-density);
 
-        if (stepTransmittance < 0.05) {
-           // rayPos -= rayDir;
-           // break;
-        }
-
         scattering.r += stepTransmittance * density * getCloudVolumeTransmittance(offsetPos, shadowDir, dither);
         scattering.g += stepTransmittance * density * exp(-density * density);
         scattering.b = stepTransmittance;
@@ -127,31 +120,12 @@ vec4 raymarchCloudVolume(vec3 scenePos, vec3 rayDir, float terrainDist, float di
 
         distance += distanceWeight * stepSize * (i + dither);
         weights += distanceWeight;
-    }
-/*
-    if (scattering.b < 0.9) {
-        // Refinement loop
 
-        rayDir *= rcp(16.0);
-        rayPos += rayDir * 0.5;
-
-        stepSize *= rcp(16.0);
-
-        for (int i = 0; i < 16; i++, rayPos += rayDir) {
-            float density = stepSize * getCloudVolumeDensity(rayPos + vec3(0.0, planetRadius + eyeAltitude * rcp(CLOUDS_SCALE), 0.0));
-            float stepTransmittance = scattering.b * exp(-min1(float(i) + dither) * density);
-
-            scattering.r += stepTransmittance * density * getCloudVolumeTransmittance(rayPos + vec3(0.0, planetRadius + eyeAltitude * rcp(CLOUDS_SCALE), 0.0), shadowDir, dither);
-            scattering.g += stepTransmittance * density * exp(-density * density);
-            scattering.b = stepTransmittance;
-
-            float distanceWeight = stepTransmittance * density;
-
-            distance += distanceWeight * stepSize * (i + dither);
-            weights += distanceWeight;
+        if (stepTransmittance < 0.05) {
+            break;
         }
     }
-*/
+
     return vec4(scattering.r * directPhase, scattering.g, scattering.b, weights > eps ? distance / weights : 1e6);
 }
 

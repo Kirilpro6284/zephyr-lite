@@ -99,6 +99,7 @@ void main() {
         coord, 
         reversedDepth, 
         scenePos,
+        -viewPos.z,
         reflectedDir,
         dither, 
         lmcoord.y

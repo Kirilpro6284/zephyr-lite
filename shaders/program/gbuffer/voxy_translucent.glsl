@@ -103,7 +103,8 @@ void voxy_emitFragment(VoxyFragmentParameters parameters) {
     fragColor.rgb += getSpecularReflections(
         coord, 
         reversedDepth, 
-        scenePos, 
+        scenePos,
+        -viewPos.z,
         reflectedDir, 
         dither, 
         parameters.lightMap.y

@@ -8,6 +8,7 @@
 
 #include "/include/utility/spaceConversion.glsl"
 #include "/include/utility/raymarching.glsl"
+#include "/include/utility/geometry.glsl"
 
 #include "/include/surface/material.glsl"
 #include "/include/surface/bsdf.glsl"
@@ -121,11 +122,16 @@ vec3 getFakeBouncedSunlight(vec3 bentNormal) {
     return clamp01(albedo * (dot(bentNormal, normalize(vec3(-shadowDir.x, 0.5 * shadowDir.y, -shadowDir.z))) * 0.5 + 0.5));
 }
 
-vec3 getSpecularReflections(vec2 coord, float depth, vec3 scenePos, vec3 reflectedDir, float dither, float skylight) {
+vec3 getSpecularReflections(vec2 coord, float depth, vec3 scenePos, float linearDepth, vec3 reflectedDir, float dither, float skylight) {
     vec3 screenPos = vec3(coord, depth);
 
-    vec3 rayEnd = sceneToScreenPos(scenePos + near * reflectedDir);
-    vec3 rayDir = clipAABB(screenPos, rayEnd - screenPos, vec3(0.0, 0.0, -0.125), vec3(1.0));
+    vec3 rayEnd = sceneToScreenPos(scenePos + linearDepth * reflectedDir);
+    vec3 rayDir = rayEnd - screenPos;
+
+    vec2 t;
+
+    rayBox(screenPos, rayDir, vec3(0.0, 0.0, -0.125), vec3(1.0), t);
+    rayDir *= t.y;
 
     bool hit = raymarchIntersection(screenPos, rayDir, max(0.01, dither));
 

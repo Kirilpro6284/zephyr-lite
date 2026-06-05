@@ -62,7 +62,7 @@ void main () {
 
     vec3 screenPos = sceneToScreenPos(scenePos);
 
-    if (mat.roughness < 0.25) color = mix(color, getSpecularReflections(screenPos.xy, screenPos.z, scenePos, reflectedDir, dither, lightLevels.y), getSchlickFresnel(mat.f0, dot(reflectedDir, textureNormal)));
+    if (mat.roughness < 0.25) color = mix(color, getSpecularReflections(screenPos.xy, screenPos.z, scenePos, -viewPos.z, reflectedDir, dither, lightLevels.y), getSchlickFresnel(mat.f0, dot(reflectedDir, textureNormal)));
 
     colorRgbe8 = encodeRgbe8(color);
 }

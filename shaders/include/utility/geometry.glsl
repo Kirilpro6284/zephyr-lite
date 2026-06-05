@@ -22,4 +22,19 @@ bool raySphere(vec3 rayPos, vec3 rayDir, float radius, out vec2 t) {
     return true;
 }
 
+bool rayBox(vec3 rayPos, vec3 rayDir, vec3 boxMin, vec3 boxMax, out vec2 t) {
+    vec3 invDir = rcp(rayDir);
+
+    vec3 tMin = (boxMin - rayPos) * invDir;
+    vec3 tMax = (boxMax - rayPos) * invDir;
+
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+
+    t.x = max(max(t1.x, t1.y), t1.z);
+    t.y = min(min(t2.x, t2.y), t2.z);
+
+    return t.y < t.x;
+}
+
 #endif // INCLUDE_UTILITY_GEOMETRY
