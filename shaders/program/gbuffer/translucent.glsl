@@ -1,30 +1,48 @@
-#include "/include/main.glsl"
-#include "/include/utility/packing.glsl"
-#include "/include/sky/atmosphere.glsl"
-#include "/include/utility/bsdf.glsl"
-#include "/include/lighting/shadowMapping.glsl"
-#include "/include/lighting/floodfill.glsl"
-#include "/include/lighting/lighting.glsl"
-#include "/include/utility/spaceConversion.glsl"
-#include "/include/utility/raymarching.glsl"
 
-uniform float alphaTestRef = 0.1;
+#include "/include/main.glsl"
+
+// ----- Varying -----
+
+noperspective varying float reversedDepth;
+
+flat varying uint geometryId;
+
+varying vec2 texcoord;
+varying vec2 lmcoord;
+varying vec3 vertexNormal;
+varying vec3 vertexColor;
 
 #ifdef fsh
 
-noperspective in float reversedDepth;
+// ----- Outputs -----
 
-in vec2 texcoord;
-in vec2 lmcoord;
-in vec3 vertexNormal;
-in vec3 vertexColor;
-
-/* RENDERTARGETS: 1 */
+/* RENDERTARGETS: 1,8 */
 layout (location = 0) out vec4 fragColor;
+layout (location = 1) out vec4 waterMask;
 
-void main ()
-{
-    #if TEMPORAL_UPSAMPLING < 100
+// ----- Uniforms -----
+
+uniform float alphaTestRef = 0.1;
+
+// ----- Includes -----
+
+#include "/block.properties"
+
+#include "/include/lighting/lighting.glsl"
+
+#include "/include/atmospherics/atmosphere.glsl"
+
+#include "/include/surface/material.glsl"
+#include "/include/surface/waterVolume.glsl"
+#include "/include/surface/tbn.glsl"
+
+#include "/include/utility/rng.glsl"
+
+// ----- Functions -----
+
+void main() {
+
+    #if TEMPORAL_UPSAMPLING > 1
         if (any(greaterThan(gl_FragCoord.xy + 0.5, internalScreenSize))) {
             return;
         }
@@ -32,65 +50,84 @@ void main ()
 
     vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
 
-    albedo.rgb = pow(albedo.rgb, vec3(2.2)) * rgbToAp1Unlit;
+    if (geometryId == BLOCK_WATER) {
+        albedo = vec4(eps);
+    } else {
+        albedo.rgb = pow(albedo.rgb, vec3(2.2)) * rgbToAp1Unlit;
+    }
 
-    Material mat = Material(
+    Material material = Material(
         albedo.rgb,
-        vec3(0.4),
-        0.2,
-        0.5,
-        0.0
+        0.3,
+        vec3(0.2),
+        vec3(0.0),
+        0.5
     );
 
-    vec2 lightLevels = adjustLightLevels(lmcoord);
     float dither = getInterleavedGradientNoise(gl_FragCoord.xy);
 
-    vec3 screenPos = vec3(internalTexelSize * gl_FragCoord.xy, reversedDepth);
+    vec2 coord = internalTexelSize * gl_FragCoord.xy;
 
-    vec3 playerPos = screenToPlayerPos(screenPos.xy, screenPos.z).xyz;
-    vec3 viewDir = normalize(playerPos - gbufferModelViewInverse[3].xyz);
+    vec3 viewPos = screenToViewPos(coord, reversedDepth).xyz;
+    vec3 scenePos = viewToScenePos(viewPos);
+    vec3 viewDir = normalize(scenePos - gbufferModelViewInverse[3].xyz);
 
-    vec3 reflectedDir = reflect(viewDir, vertexNormal);
+    vec3 textureNormal = normalize(geometryId == BLOCK_WATER ? tbnNormal(vertexNormal) * getWaveNormal(scenePos + cameraPosition) : vertexNormal);
+    vec2 lightLevels = adjustLightLevels(lmcoord);
+
+    vec3 reflectedDir = reflect(viewDir, textureNormal);
 
     fragColor.rgb = getSceneLighting(
-        playerPos, 
+        scenePos, 
         viewDir,
-        mat,
-        lightLevels.y * 0.4 * getSkyIrradiance(vertexNormal),
+        material,
+        lightLevels.g * 0.4 * getSkyIrradiance(vertexNormal),
         vertexNormal,
-        vertexNormal,
+        textureNormal,
         lightLevels,
         smoothstep(0.2, 0.4, lmcoord.y),
         dither,
         1.0
     );
 
-    float fresnel = getSchlickFresnel(0.2, dot(reflectedDir, vertexNormal));
+    float fresnel = getSchlickFresnel(material.f0.g, max0(dot(reflectedDir, textureNormal)));
 
     fragColor.a = mix(albedo.a, 1.0, fresnel);
     fragColor.rgb *= fragColor.a * (1.0 - fresnel);
 
-    fragColor.rgb += fresnel * getSpecularReflections(
-        screenPos, 
-        playerPos, 
-        reflectedDir, 
+    fragColor.rgb += (isEyeInWater == 1 ? 1.0 : fragColor.a * fresnel) * getSpecularReflections(
+        coord, 
+        reversedDepth, 
+        scenePos,
+        reflectedDir,
         dither, 
-        lightLevels.y
+        lmcoord.y
     );
 
-    if (albedo.a < alphaTestRef) discard;
+    if (geometryId == BLOCK_WATER) {
+        waterMask.rg = octEncode(textureNormal);
+        waterMask.b = -viewPos.z * rcp(viewDistance);
+        waterMask.a = 1.0;
+    } else {
+        waterMask = vec4(0.0);
+    }
+
+    if (albedo.a < alphaTestRef && geometryId != BLOCK_WATER) discard;
 }
 
 #endif
 
 #ifdef vsh
 
-noperspective out float reversedDepth;
+// ----- Attributes -----
 
-out vec2 texcoord;
-out vec2 lmcoord;
-out vec3 vertexNormal;
-out vec3 vertexColor;
+attribute vec2 mc_Entity;
+
+// ----- Includes -----
+
+#include "/include/utility/spaceConversion.glsl"
+
+// ----- Functions -----
 
 void main ()
 {
@@ -98,19 +135,21 @@ void main ()
 
     gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
-    #ifdef STAGE_HAND
-        viewPos = projectAndDivide(gbufferProjectionInverse, gl_Position.xyz / gl_Position.w);
-    #endif
+#ifdef STAGE_HAND
+    viewPos = projectAndDivide(gbufferProjectionInverse, gl_Position.xyz / gl_Position.w);
+#endif
 
     gl_Position.xy += gl_Position.w * taa_offset;
-    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, taauRenderScale);
+    gl_Position.xy += (gl_Position.xy + gl_Position.w) * (taauRenderScale - 1.0);
+
+    geometryId = mc_Entity.x < 0.0 ? 255u : uint(mc_Entity.x);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
     lmcoord = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
     vertexColor = gl_Color.rgb;
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
     
-    reversedDepth = (lodProjMat_2.z * viewPos.z + lodProjMat_3.z) / (lodProjMat_2.w * viewPos.z);
+    reversedDepth = 0.5 * (gbufferProjScale.z * viewPos.z + gbufferProjScale.w) / viewPos.z;
 }
 
 #endif

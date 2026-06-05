@@ -1,9 +1,21 @@
-#if !defined INCLUDE_TEXTURE_SAMPLING
-#define INCLUDE_TEXTURE_SAMPLING
+#if !defined INCLUDE_UTILITY_TEXTURESAMPLING
+#define INCLUDE_UTILITY_TEXTURESAMPLING
 
-#include "/include/utility/packing.glsl"
+#include "/include/utility/encoding.glsl"
 
-vec3 textureRgbe8 (sampler2D rgbeSampler, vec2 coord, vec2 texSize) {
+float linearWeight(float coord, float offset) {
+    return 1.0 - abs(coord + offset);
+}
+
+float bilinearWeight(vec2 coord, vec2 offset) {
+    return linearWeight(coord.x, offset.x) * linearWeight(coord.y, offset.y);
+}
+
+float trilinearWeight(vec3 coord, vec3 offset) {
+    return bilinearWeight(coord.xy, offset.xy) * linearWeight(coord.z, offset.z);
+}
+
+vec3 textureRgbe8(sampler2D rgbeSampler, vec2 coord, vec2 texSize) {
     coord = texSize * coord - 0.5;
     ivec2 texel = ivec2(coord);
 
@@ -20,7 +32,7 @@ vec3 textureRgbe8 (sampler2D rgbeSampler, vec2 coord, vec2 texSize) {
     return result;
 }
 
-vec3 textureRgbe8 (sampler3D rgbeSampler, vec3 coord, vec3 texSize) {
+vec3 textureRgbe8(sampler3D rgbeSampler, vec3 coord, vec3 texSize) {
     coord = texSize * coord - 0.5;
     ivec3 texel = ivec3(coord);
 
@@ -37,8 +49,7 @@ vec3 textureRgbe8 (sampler3D rgbeSampler, vec3 coord, vec3 texSize) {
     return result;
 }
 
-vec4 cubic (float v)
-{
+vec4 cubic(float v) {
     vec4 n = vec4(1.0, 2.0, 3.0, 4.0) - v;
     vec4 s = n * n * n;
     float x = s.x;
@@ -48,8 +59,7 @@ vec4 cubic (float v)
     return vec4(x, y, z, w) * rcp(6.0);
 }
 
-vec4 texBicubic (sampler2D sampler, vec2 texCoords, vec2 texSize)
-{
+vec4 texBicubic(sampler2D sampler, vec2 texCoords, vec2 texSize) {
     vec2 invTexSize = 1.0 / texSize;
 
     texCoords = texCoords * texSize - 0.5;
@@ -156,4 +166,4 @@ vec4 texCatmullRom (in sampler2D linearSampler, in vec2 uv, in vec2 texSize)
     return result;
 }
 
-#endif // INCLUDE_TEXTURE_SAMPLING
+#endif // INCLUDE_UTILITY_TEXTURESAMPLING

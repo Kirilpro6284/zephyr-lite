@@ -1,15 +1,87 @@
+
+# ----- 
+
+screen.zephyr_shaders = Zephyr Shaders
+
+profile.default = Default
+profile.performance = Performance
+
+# ----- Lighting -----
+
+screen.lighting = Lighting
+
+option.NIGHT_BRIGHTNESS = Night Brightness
+
+    screen.indirect_lighting = Indirect Lighting
+
+    option.GTAO_RADIUS = GTAO Radius
+    option.GTAO_SLICES = GTAO Slices
+    option.GTAO_HORIZON_STEPS = GTAO Horizon Steps
+
+    option.SUNLIGHT_GI_SAMPLES = Sunlight GI Samples
+    option.SUNLIGHT_GI_RANGE = Sunlight GI Range
+
+option.COLORED_LIGHTING = Colored Lighting
+option.VOXEL_DISTANCE   = Voxel Volume Size
+
+value.VOXEL_DISTANCE.64  = 128³
+value.VOXEL_DISTANCE.128 = 256³
+value.VOXEL_DISTANCE.192 = 384³
+value.VOXEL_DISTANCE.256 = 512³
+
+# ----- Shadows -----
+
+screen.shadows = Shadows
+
 option.shadowMapResolution = Shadow Map Resolution
 option.shadowDistance      = Shadow Distance
 option.SHADOW_SOFTNESS     = Shadow Softness
 option.SHADOW_SAMPLES      = Shadow Samples
-option.NIGHT_BRIGHTNESS    = Night Brightness
-option.TONEMAP_OPERATOR    = Tonemap Operator
+
+# ----- Atmospherics ----
+
+screen.atmospherics = Atmospherics
+
+option.VOLUMETRIC_CLOUDS = Volumetric Clouds
+option.CLOUDS_SCALE = Clouds Scale
+option.CLOUDS_VIEW_SCATTER_POINTS = View Scatter Points
+option.CLOUDS_LIGHT_SCATTER_POINTS = Light Scatter Points
+
+option.AIR_FOG_VL = Volumetric Fog
+option.AIR_FOG_SCATTER_POINTS = Fog Scatter Points
+
+# ----- Surface -----
+
+screen.surface = Surface
+
+option.HARDCODED_SPECULAR = Hardcoded Specular
+option.EMISSIVE_SCALE = Emissive Intensity
+option.SSS_ENABLED = Subsurface Scattering
+option.SSS_INTENSITY = SSS Intensity
+
+# ----- Anti Aliasing -----
+
+screen.anti_aliasing = Anti Aliasing
+
 option.TAA                 = TAA
 option.TEMPORAL_UPSAMPLING = Temporal Upsampling
-option.PURKINJE_EFFECT     = Purkinje Effect
-option.PURKINJE_AMOUNT     = Purkinje Amount
-option.COLORED_LIGHTING    = Colored Lighting
-option.VOXELIZATION_DISTANCE = Voxel Volume Size
+
+option.TAA_HISTORY_LIMIT = History Limit
+option.TAA_DEPTH_REJECTION = Depth Rejection
+
+suffix.TEMPORAL_UPSAMPLING = x
+
+# ----- Post Processing -----
+
+screen.post_processing = Post Processing
+
+option.tonemap = Tonemap Operator
+
+option.PURKINJE_EFFECT = Purkinje Effect
+option.PURKINJE_AMOUNT = Purkinje Amount
+
+
+
 
 value.TONEMAP_OPERATOR.0 = AgX
 value.TONEMAP_OPERATOR.1 = Lottes

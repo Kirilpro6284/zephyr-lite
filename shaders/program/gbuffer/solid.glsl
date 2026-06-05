@@ -1,40 +1,55 @@
-#include "/include/main.glsl"
-#include "/include/utility/packing.glsl"
-#include "/include/utility/colorMatrices.glsl"
-#include "/include/surface/material.glsl"
-#include "/include/utility/spaceConversion.glsl"
 
-uniform float alphaTestRef = 0.1;
+#include "/include/main.glsl"
+
+// ----- Varying -----
+
+flat varying float geometryId;
+
+varying vec2 texcoord;
+varying vec2 lightLevels;
+varying vec3 vertexColor;
+varying vec3 vertexNormal;
+varying vec4 vertexTangent;
 
 #ifdef fsh
 
-flat in uint geometryId;
+// ----- Outputs -----
 
-noperspective in float reversedDepth;
+/* RENDERTARGETS: 9 */
+layout (location = 0) out uvec4 encoded;
 
-in vec2 texcoord;
-in vec2 lightLevels;
-in vec3 vertexColor;
-in vec3 vertexNormal;
-in vec4 vertexTangent;
+// ----- Uniforms -----
 
-/* RENDERTARGETS: 8,9,11 */
-layout (location = 0) out uvec4 colortex8Out;
-layout (location = 1) out uvec4 colortex9Out;
-layout (location = 2) out vec4 colortex11Out;
+uniform float alphaTestRef = 0.1;
 
-void main ()
-{
-    #if TEMPORAL_UPSAMPLING < 100
+// ----- Includes -----
+
+#include "/include/utility/encoding.glsl"
+#include "/include/utility/colorMatrices.glsl"
+#include "/include/utility/spaceConversion.glsl"
+#include "/include/utility/rng.glsl"
+
+#include "/include/surface/material.glsl"
+#include "/include/surface/tbn.glsl"
+
+// ----- Functions -----
+
+void main() {
+
+    #if TEMPORAL_UPSAMPLING > 1
         if (any(greaterThan(gl_FragCoord.xy + 0.5, internalScreenSize))) {
             return;
         }
     #endif
 
-    vec4 albedo = texture(gtexture, texcoord) * vec4(vertexColor, 1.0);
+    vec2 texSize = vec2(textureSize(gtexture, 0));
+    vec2 atlasTexCoord = texSize * texcoord;
+    float mipLevel = max(0.0, taauRenderScale * 0.5 * log2(max(lengthSquared(dFdx(atlasTexCoord)), lengthSquared(dFdy(atlasTexCoord)))));
+
+    vec4 albedo = textureLod(gtexture, texcoord, mipLevel) * vec4(vertexColor, 1.0);
 
 #ifdef HARDCODED_SPECULAR
-    vec4 specularData = getHardcodedSpecular(albedo.rgb, geometryId);
+    vec4 specularData = getHardcodedSpecular(albedo.rgb, uint(geometryId));
 #else
     vec4 specularData = texture(specular, texcoord);
 #endif
@@ -44,15 +59,13 @@ void main ()
     vec4 normalData = texture(normals, texcoord);
 
     vec3 textureNormal = vec3(normalData.rg * 2.0 - 1.0, 1.0);
-    textureNormal.xy *= step(vec2(rcp(128.0)), textureNormal.xy);
+    textureNormal.xy *= step(vec2(rcp(128.0)), abs(textureNormal.xy));
     textureNormal.z = sqrt(max(0.0, 1.0 - dot(textureNormal.xy, textureNormal.xy)));
 
-    colortex8Out.x = packUnorm4x8(vec4(albedo.rgb, 0.0)) | ((geometryId & 255u) << 24u);
-    colortex8Out.y = packExp4x8(vec4(octEncode(vertexNormal), lightLevels + rcp(254.0) * getInterleavedGradientNoise(gl_FragCoord.xy)));
-    colortex9Out.x = packExp2x16(octEncode(tbnMatrix * textureNormal));
-    colortex9Out.y = packUnorm4x8(specularData);
-
-    colortex11Out = vec4(reversedDepth, 0.0, 0.0, 1.0);
+    encoded.r = packUnorm4x8(vec4(albedo.rgb, geometryId * rcp(255.0)));
+    encoded.g = packUnorm4x8(vec4(octEncode(vertexNormal), lightLevels + rcp(255.0) * (getInterleavedGradientNoise(gl_FragCoord.xy) - 0.5)));
+    encoded.b = packUnorm2x16(octEncode(tbnMatrix * textureNormal));
+    encoded.a = packUnorm4x8(specularData);
 
     if (albedo.a < alphaTestRef) discard;
 }
@@ -61,42 +74,36 @@ void main ()
 
 #ifdef vsh
 
+// ----- Attributes -----
+
 attribute vec4 at_tangent;
 attribute vec2 mc_Entity;
 
-flat out uint geometryId;
+// ----- Includes -----
 
-noperspective out float reversedDepth;
+#include "/include/utility/spaceConversion.glsl"
 
-out vec2 texcoord;
-out vec2 lightLevels;
-out vec3 vertexColor;
-out vec3 vertexNormal;
-out vec4 vertexTangent;
+// ----- Functions -----
 
-void main ()
-{   
+void main() {   
     vec3 viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
 
     gl_Position = gl_ProjectionMatrix * vec4(viewPos, 1.0);
 
-    #ifdef STAGE_HAND
-        viewPos = projectAndDivide(gbufferProjectionInverse, gl_Position.xyz / gl_Position.w);
-    #endif
+#ifdef STAGE_HAND
+    viewPos = projectAndDivide(gbufferProjectionInverse, gl_Position.xyz / gl_Position.w);
+#endif
 
     gl_Position.xy += gl_Position.w * taa_offset;
-    gl_Position.xy = mix(-gl_Position.ww, gl_Position.xy, taauRenderScale);
+    gl_Position.xy += (gl_Position.xy + gl_Position.w) * (taauRenderScale - 1.0);
 
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
-    lightLevels = mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1;
+    lightLevels = clamp01((mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1 - (1.0 / 16.0)) * (16.0 / 14.0));
     vertexColor = gl_Color.rgb;
     vertexNormal = transpose(mat3(gbufferModelView)) * gl_NormalMatrix * gl_Normal;
-    vertexNormal = normalize(vertexNormal * step(vec3(0.01), abs(vertexNormal)));
     vertexTangent = vec4(mat3(gbufferModelViewInverse) * mat3(gl_ModelViewMatrix) * at_tangent.xyz, at_tangent.w);
-    vertexTangent.xyz = normalize(vertexTangent.xyz * step(vec3(0.025), abs(vertexTangent.xyz)));
 
-    reversedDepth = (lodProjMat_2.z * viewPos.z + lodProjMat_3.z) / (lodProjMat_2.w * viewPos.z);
-    geometryId = uint(mc_Entity.x) - 10000u;
+    geometryId = mc_Entity.x < 0.0 ? 255.0 : mc_Entity.x;
 }
 
 #endif

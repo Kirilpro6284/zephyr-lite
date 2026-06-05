@@ -1,180 +1,143 @@
-#if !defined INCLUDE_MAIN
-#define INCLUDE_MAIN
 
-#include "/include/uniforms.glsl"
+#if !defined STAGE_VOXY
+    #include "/include/uniforms.glsl"
+#endif
+
 #include "/include/config.glsl"
 
-#define rcp(x)       (1.0 / (x))
-#define max0(x)      max(x, 0.0)
-#define min1(x)      min(x, 1.0)
-#define clamp01(x)   clamp(x, 0.0, 1.0)
-#define HALF_PI      1.57079632
-#define PI           3.14159265
-#define TWO_PI       6.28318530
-#define INFINITY     exp2(128.0)
+// ----- Macros -----
+
+#ifdef fsh
+    #define varying in
+#endif
+
+#ifdef vsh
+    #define varying out
+#endif
+
+#define rcp(x) (1.0 / (x))
+#define max0(x) max(x, 0.0)
+#define min1(x) min(x, 1.0)
+#define clamp01(x) clamp(x, 0.0, 1.0)
 #define luminance(c) dot(c, ap1RgbY)
-#define torad(x)     (0.01745329 * x)
-#define hermite(x)   smoothstep(0.0, 1.0, x)
+#define step0(x) step(0.0, x)
+#define smoothstep01(x) smoothstep(0.0, 1.0, x)
+
+#define acosSafe(x) acos(clamp(x, -1.0, 1.0))
+#define log2Safe(x) log2(max(x, eps))
+#define sqrtSafe(x) sqrt(max(x, 0.0))
+#define rcpSafe(x) (1.0 / max(x, eps))
 
 #if TEMPORAL_UPSAMPLING == 1
-    #define taauRenderScale 1.0
+    #define taauRenderScale 1.0 
 #elif TEMPORAL_UPSAMPLING == 2
-    #define taauRenderScale 0.7071
+    #define taauRenderScale 0.7071 
 #elif TEMPORAL_UPSAMPLING == 3
-    #define taauRenderScale 0.5773
+    #define taauRenderScale 0.5773 
 #elif TEMPORAL_UPSAMPLING == 4
-    #define taauRenderScale 0.5
+    #define taauRenderScale 0.5 
 #endif
 
-const float indirectRenderScale = 0.01 * INDIRECT_RENDER_SCALE;
-const float airFogRenderScale   = 0.01 * AIR_FOG_RENDER_SCALE;
+// ----- Constants -----
 
-const mat2 vogelPhase = mat2(cos(0.2451223 * TWO_PI), -sin(0.2451223 * TWO_PI), sin(0.2451223 * TWO_PI), cos(0.2451223 * TWO_PI));
+const float eps = 1e-4;
 
-const vec3 shadowProjScale = vec3(rcp(shadowDistance), rcp(shadowDistance), -rcp(shadowDepthDist));
+const float phi1 = 1.6180340;
+const float phi2 = 1.3247180;
+const float phi3 = 1.2207441;
+
+const float HALF_PI = 1.57079632;
+const float PI = 3.14159265;
+const float TWO_PI = 6.28318530;
+
+const mat2 vogelPhase = mat2(
+    cos(0.2451223 * TWO_PI), -sin(0.2451223 * TWO_PI), 
+    sin(0.2451223 * TWO_PI), cos(0.2451223 * TWO_PI)
+);
+
+const vec3 shadowProjScale = vec3(rcp(shadowDistance), rcp(shadowDistance), rcp(-shadowDepthDist));
 const vec3 shadowProjScaleInv = vec3(shadowDistance, shadowDistance, -shadowDepthDist);
 
-#if VOXELIZATION_DISTANCE == 64
-    const ivec3 voxelVolumeSize = ivec3(128, 128, 128);
-    const ivec3 halfVoxelVolumeSize = ivec3(64, 64, 64);
-#elif VOXELIZATION_DISTANCE == 128
-    const ivec3 voxelVolumeSize = ivec3(256, 256, 256);
-    const ivec3 halfVoxelVolumeSize = ivec3(128, 128, 128);
-#elif VOXELIZATION_DISTANCE == 192
-    const ivec3 voxelVolumeSize = ivec3(384, 384, 384);
-    const ivec3 halfVoxelVolumeSize = ivec3(192, 192, 192);
-#elif VOXELIZATION_DISTANCE == 256
-    const ivec3 voxelVolumeSize = ivec3(512, 512, 512);
-    const ivec3 halfVoxelVolumeSize = ivec3(256, 256, 256);
-#endif
+// ----- Functions -----
 
-mat2 rotate (float theta) {
+mat2 rotate(float theta) {
     float cosTheta = cos(theta);
     float sinTheta = sin(theta);
 
     return mat2(cosTheta, -sinTheta, sinTheta, cosTheta);
 }
 
-float linearizeDepth (float depth) {
-    return (lodProjMatInv_3.z) / (lodProjMatInv_2.w * depth + lodProjMatInv_3.w);
-}
-
-vec3 clipAABB (vec3 origin, vec3 dir, vec3 boxMin, vec3 boxMax) 
-{
-    vec3 t2 = max((boxMin - origin) / dir, (boxMax - origin) / dir);
+vec3 clipAABB(vec3 origin, vec3 dir, vec3 boxMin, vec3 boxMax) {
+    vec3 invDir = rcpSafe(dir);
+    vec3 t2 = max((boxMin - origin) * invDir, (boxMax - origin) * invDir);
 
     return dir * min(min(t2.x, t2.y), t2.z);
 }
 
-float sqr (float x) {
+float sqr(float x) {
     return x * x;
 }
 
-vec2 sqr (vec2 x) {
+vec2 sqr(vec2 x) {
     return x * x;
 }
 
-vec3 sqr (vec3 x) {
+vec3 sqr(vec3 x) {
     return x * x;
 }
 
-float lift (float x, float a) {
+float lift(float x, float a) {
     return x / (a * abs(x) + 1.0 - a);
 }
 
-float liftInv (float x, float a) {
+float liftInv(float x, float a) {
     return x * (1.0 - a) / (1.0 - abs(x) * a);
 }
 
-float linearWeight (float coord, float offset) {
-    return 1.0 - abs(coord + offset);
+float invLength(vec2 v) {
+	return inversesqrt(dot(v, v));
 }
 
-float bilinearWeight (vec2 coord, vec2 offset) {
-    return linearWeight(coord.x, offset.x) * linearWeight(coord.y, offset.y);
+float invLength(vec3 v) {
+	return inversesqrt(dot(v, v));
 }
 
-float trilinearWeight (vec3 coord, vec3 offset) {
-    return bilinearWeight(coord.xy, offset.xy) * linearWeight(coord.z, offset.z);
+float invLength(vec4 v) {
+	return inversesqrt(dot(v, v));
 }
 
-// Adapted from https://www.youtube.com/watch?v=Qz0KTGYJtUk&t=674s
-
-uint randomInt (inout uint state) {
-    state = state * 747796405u + 2891336453u;
-    uint result = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-    return (result >> 22u) ^ result;
+float lengthSquared(vec2 v) {
+	return dot(v, v);
 }
 
-float randomValue (inout uint state) {
-    return randomInt(state) * rcp(4294967296.0);
+float lengthSquared(vec3 v) {
+	return dot(v, v);
 }
 
-float normalDist (inout uint state) {
-    return sqrt(-log2(randomValue(state))) * cos(TWO_PI * randomValue(state));
+float lengthSquared(vec4 v) {
+	return dot(v, v);
 }
 
-vec3 randomDir (inout uint state) {	
-    return normalize(vec3(normalDist(state), normalDist(state), normalDist(state)));
+float distanceSquared(vec2 a, vec2 b) {
+	return lengthSquared(a - b);
 }
 
-// https://twitter.com/Stubbesaurus/status/937994790553227264
-
-vec2 octEncode (in vec3 n) {
-    n.xyz /= abs(n.x) + abs(n.y) + abs(n.z);
-    float t = max(0.0, -n.y);
-    n.x += (n.x > 0.0) ? t : -t;
-    n.z += (n.z > 0.0) ? t : -t;
-    return n.xz * 0.5 + 0.5;
+float distanceSquared(vec3 a, vec3 b) {
+	return lengthSquared(a - b);
 }
 
-vec3 octDecode (in vec2 f) {
-    f = f * 2.0 - 1.0;
-
-    vec3 n = vec3(f.x, 1.0 - abs(f.x) - abs(f.y), f.y);
-    float t = max(0.0, -n.y);
-    n.x += n.x >= 0.0 ? -t : t;
-    n.z += n.z >= 0.0 ? -t : t;
-    return normalize(n);
+float distanceSquared(vec4 a, vec4 b) {
+	return lengthSquared(a - b);
 }
 
-mat3 tbnNormalTangent (vec3 normal, vec4 tangent) {
-    return mat3(tangent.xyz, cross(tangent.xyz, normal) * sign(tangent.w), normal);
+float signum(float v) {
+	return v < 0.0 ? -1.0 : 1.0;
 }
 
-mat3 tbnNormal (vec3 normal) {
-    return tbnNormalTangent(normal, vec4(normalize(cross(normal, abs(normal.y) > abs(normal.z) ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0))), 1.0));
+vec2 signum(vec2 v) {
+	return vec2(signum(v.x), signum(v.y));
 }
-    
-#ifndef STAGE_VOXY
-    uvec4 getMaterialData (ivec2 texel) {
-        return uvec4(
-            texelFetch(colortex8, texel, 0).rg,
-            texelFetch(colortex9, texel, 0).rg
-        );
-    }
-    
-    float getInterleavedGradientNoise (vec2 coord) { 
-        return fract(fract(dot(floor(coord), vec2(3.5557133, 0.3092692))) + 0.6180339 * float(frameCounter & 127)); 
-    }
 
-    // https://discordapp.com/channels/237199950235041794/525510804494221312/1416364500591837216
-    vec3 getBlueNoise (vec2 coord) {
-        return texelFetch(
-            noisetex,
-            ivec3(ivec2(coord) % 128, frameCounter % 64),
-            0
-        ).rgb;
-    }
-
-    // R2 sequence from
-    // https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
-
-    vec3 getBlueNoise (vec2 coord, int i) {
-        const float g = 1.324717;
-
-        return getBlueNoise(coord + 128.0 * fract(0.5 + i * (1.0 / vec2(g, g * g))));
-    }
-#endif
-
-#endif // INCLUDE_MAIN
+vec3 signum(vec3 v) {
+	return vec3(signum(v.x), signum(v.y), signum(v.z));
+}

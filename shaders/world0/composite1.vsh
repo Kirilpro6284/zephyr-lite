@@ -1,3 +1,5 @@
 #version 430 compatibility
 
-#include "/program/blit.glsl"
+void main() {
+    gl_Position = ftransform();
+}

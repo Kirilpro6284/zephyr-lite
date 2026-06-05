@@ -1,3 +1,3 @@
 #version 430 compatibility
 
-#include "/program/deferred/indirectLighting.glsl"
+#include "/program/deferred/indirectLighting.fsh"

@@ -1,23 +1,39 @@
-#include "/include/main.glsl"
-#include "/include/lighting/shadowMapping.glsl"
-#include "/include/lighting/floodfill.glsl"
 
-uniform float alphaTestRef = 0.1;
+#include "/include/main.glsl"
+
+// ----- Varying -----
+
+flat varying uint geometryId;
+
+varying float skylight;
+varying vec2 texcoord;
+varying vec3 worldPos;
+varying vec3 vertexColor;
+varying vec3 vertexNormal;
 
 #ifdef fsh
 
-#ifdef SUNLIGHT_GI_LEAK_FIX
-    in float skylight;
-#else
-    const float skylight = 0.0;
-#endif
-in vec2 texcoord;
-in vec3 vertexColor;
-in vec3 vertexNormal;
+// ----- Outputs -----
 
 /* RENDERTARGETS: 0,1 */
 layout (location = 0) out vec4 shadowcolor0Out;
 layout (location = 1) out vec4 shadowcolor1Out;
+
+// ----- Uniforms -----
+
+uniform float alphaTestRef = 0.1;
+
+// ----- Includes -----
+
+#include "/block.properties"
+
+#include "/include/surface/material.glsl"
+#include "/include/surface/waterVolume.glsl"
+
+#include "/include/lighting/shadowMapping.glsl"
+#include "/include/lighting/voxelVolume.glsl"
+
+// ----- Functions -----
 
 void main () {
     vec4 albedo = texture(gtexture, texcoord);
@@ -25,6 +41,12 @@ void main () {
     albedo.rgb = pow(albedo.rgb * vertexColor, vec3(2.2)) * rgbToAp1Unlit;
 
     if (renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT && albedo.a > 0.99) albedo.a = 0.99;
+    
+    if (geometryId == BLOCK_WATER) {
+        vec3 waterNormal = getWaveNormal(worldPos);
+
+        albedo = vec4(clamp01(exp(-waterExtinction * 2.0) * (1.0 + dot(waterNormal.xy, vec2(4.0)))), 0.0);
+    }
 
     shadowcolor0Out = gl_FrontFacing ? albedo : vec4(0.0, 0.0, 0.0, 1.0);
     shadowcolor1Out = vec4(octEncode(vertexNormal), skylight, float(renderStage != MC_RENDER_STAGE_TERRAIN_TRANSLUCENT));
@@ -36,39 +58,42 @@ void main () {
 
 #ifdef vsh
 
+// ----- Attributes -----
+
 attribute vec4 at_midBlock;
 attribute vec2 mc_Entity;
 
-#ifdef SUNLIGHT_GI_LEAK_FIX
-    out float skylight;
-#endif
-out vec2 texcoord;
-out vec3 vertexColor;
-out vec3 vertexNormal;
+// ----- Includes -----
+
+#include "/include/lighting/shadowMapping.glsl"
+#include "/include/lighting/voxelVolume.glsl"
+
+// ----- Functions -----
 
 void main () {
     vec3 shadowViewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
+    vec3 scenePos = mat3(shadowModelViewInverse) * shadowViewPos + shadowModelViewInverse[3].xyz;
    
     gl_Position = vec4(shadowProjScale * shadowViewPos, 1.0);
 
     gl_Position.xy = distortShadowPos(gl_Position.xy);
 
-#ifdef SUNLIGHT_GI_LEAK_FIX
+    geometryId = mc_Entity.x < 0.0 ? 255u : uint(mc_Entity.x);
+
     skylight = (mat4x2(gl_TextureMatrix[1]) * gl_MultiTexCoord1).g;
-#endif
     texcoord = mat4x2(gl_TextureMatrix[0]) * gl_MultiTexCoord0;
+    worldPos = scenePos + cameraPosition;
     vertexColor = gl_Color.rgb;
     vertexNormal = gl_NormalMatrix * gl_Normal;
 
     #ifdef COLORED_LIGHTING
         if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_TRANSLUCENT) {
-            vec3 playerPos = (shadowModelViewInverse * vec4(shadowViewPos, 1.0)).xyz;
-            ivec3 voxelPos = playerToVoxelPos(playerPos + at_midBlock.xyz * rcp(64.0));
+            ivec3 voxelPos = sceneToVoxelPos(scenePos + at_midBlock.xyz * rcp(64.0));
 
             if (inVoxelBounds(voxelPos)) {
-                uint voxelData = (uint(mc_Entity.x) - 10000u) & 255u;
+                uint voxelData = geometryId & 255u;
 
-                if (voxelData < 16u || voxelData > 63u) voxelData = uint(renderStage == MC_RENDER_STAGE_TERRAIN_SOLID);
+                if (voxelData > 63u) voxelData = uint(renderStage == MC_RENDER_STAGE_TERRAIN_SOLID);
 
                 imageStore(voxelBuffer, voxelPos, uvec4(voxelData, 0u, 0u, 1u));
             }

@@ -2,4 +2,4 @@
 
 #define FILTER_PASS 0
 
-#include "/program/deferred/spatialFilter.glsl"
+#include "/program/deferred/spatialFilter.fsh"
